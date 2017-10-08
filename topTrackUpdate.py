@@ -24,15 +24,16 @@ network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_s
                                password_hash=pylast.md5(last_fm_password))
 user = network.get_user(last_fm_username)
 
-# Spotify APIscope = 'user-library-read'
+# Spotify API
 userTop = config.spotfiy_user_top
-last_fm_username = config.spotify_username
+spotify_username = config.spotify_username
 client_id = config.spotify_client_id
 client_secret = config.spotfiy_client_secret
 
-token = util.prompt_for_user_token(last_fm_username, client_id=client_id, client_secret=client_secret,
+token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
                                    redirect_uri="http://localhost:8090", scope=userTop)
 
+# Get the top track from the last 7 days
 topTrack = user.get_top_tracks(period='7day', limit='1')
 
 for x in topTrack:
