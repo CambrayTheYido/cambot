@@ -12,17 +12,11 @@ twitter_api_secret = config.twitter_api_secret
 twitter_access_token = config.twitter_access_token
 twitter_access_token_secret = config.twitter_access_token_secret
 
-api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter_access_token_secret)
-
 # LastFM API
 last_fm_api_key = config.lastfm_api_key
 last_fm_api_secret = config.lastfm_api_secret
 last_fm_username = config.lastfm_username
 last_fm_password = config.lastfm_password_hash
-
-network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username,
-                               password_hash=pylast.md5(last_fm_password))
-user = network.get_user(last_fm_username)
 
 # Spotify API
 userTop = config.spotfiy_user_top
@@ -30,6 +24,15 @@ spotify_username = config.spotify_username
 client_id = config.spotify_client_id
 client_secret = config.spotfiy_client_secret
 
+#Twitter object
+api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter_access_token_secret)
+
+#LastFM network objects
+network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username,
+                               password_hash=pylast.md5(last_fm_password))
+user = network.get_user(last_fm_username)
+
+#Spotify Token
 token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
                                    redirect_uri="http://localhost:8090", scope=userTop)
 
