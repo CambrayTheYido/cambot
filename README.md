@@ -1,5 +1,5 @@
 # cambot
-Twitter bot that uses APIs to tweet what I get it to
+Twitter bot that uses APIs such as Spotipy; a python wrapper for the Spotify web API and pylast; a python wrapper for the last.fm web API.
 
 ### dailySpotifyCount.py 
 
