@@ -46,8 +46,18 @@ if token:
     sp = spotipy.Spotify(auth=token)
     topTracks = sp.current_user_top_tracks(time_range='short_term')
     for track in topTracks['items']:
-        print(track['name'])
+        # Get name of track
+        song_name = track['name']
+        # Get artist name
+        list_of_artists = track['artists']
+        list_of_artists = list_of_artists[0]
+        artist = list_of_artists['name']
+
+        line_to_write = str(artist) + " - " + str(song_name) + "\n"
+
         file = open("Top tracks of " + str(month) + ".txt", "a")
-        file.write(str(track['name']) + "\n")
+        file.write(line_to_write)
+        print(line_to_write)
+
 else:
     print("Can't get token for", spotify_username)
