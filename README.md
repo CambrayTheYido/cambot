@@ -24,3 +24,15 @@ This is run every 30 mins and checks if my most listened to artist of the last 7
 ### topTrackUpdate.py
 
 This is run every 30 mins and checks if my most listened to track of the last 7 days has changed from what it last tweeted.
+
+### topTracksLongTerm.py
+
+This gets my top tracks from over the last few years using the Spotify API and then tweets them in order of most played.
+
+### topTracksMediumTerm.py
+
+This gets my top tracks from over the last 6 months using the Spotify API and then tweets them in order of most played.
+
+### topTracksShortTerm.py
+
+This gets my top tracks from over the last month using the Spotify API and then tweets them in order of most played.
