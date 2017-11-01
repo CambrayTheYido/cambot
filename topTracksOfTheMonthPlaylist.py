@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+import datetime
+import spotipy
+from twython import Twython
+import spotipy.util as util
+import config
+
+# Spotify API
+userTop = config.spotfiy_user_top
+spotify_username = config.spotify_username
+client_id = config.spotify_client_id
+client_secret = config.spotfiy_client_secret
+
+# Twitter API
+twitter_api_key = config.twitter_api_key
+twitter_api_secret = config.twitter_api_secret
+twitter_access_token = config.twitter_access_token
+twitter_access_token_secret = config.twitter_access_token_secret
+
+scope = 'playlist-modify-public user-top-read'
+# Spotify Token
+token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
+                                   redirect_uri="http://localhost:8090", scope=scope)
+
+#Twitter object
+api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter_access_token_secret)
+
+now = datetime.datetime.now()
+month = now.month
+if (month == 1):
+    month = "January"
+elif (month == 2):
+    month = "February"
+elif (month == 3):
+    month = "March"
+elif (month == 4):
+    month = "April"
+elif (month == 5):
+    month = "May"
+elif (month == 6):
+    month = "June"
+elif (month == 7):
+    month = "July"
+elif (month == 8):
+    month = "August"
+elif (month == 9):
+    month = "September"
+elif (month == 10):
+    month = "October"
+elif (month == 11):
+    month = "November"
+elif (month == 12):
+    month = "December"
+
+playlist_name = "Top tracks of " + month + " " +str(now.year)
+
+if token:
+    sp = spotipy.Spotify(auth=token)
+
+    # Create a new playlist
+    playlist = sp.user_playlist_create(user=spotify_username, name=playlist_name, public=True)
+    playlist_id = playlist.get('uri')
+
+
+    # Get top 50 tracks from past month
+    topTracks = sp.current_user_top_tracks(time_range='short_term', limit=50)
+
+    list_of_tracks_to_add = []
+
+    # Iterate through the tracks to get the relevant information
+    for track in topTracks['items']:
+
+        # Get name of track
+        song_name = track['name']
+
+        # Get artist name
+        list_of_artists = track['artists']
+        list_of_artists = list_of_artists[0]
+        artist = list_of_artists['name']
+
+        # Combine artist and song name to get a more specific search on spotify
+        song_and_artist = str(artist) + " - " + str(song_name)
+
+        result = sp.search(song_and_artist, limit='1')
+        extract = result['tracks']['items']
+        extract = extract[0]
+        track_id = extract['uri']
+
+        list_of_tracks_to_add.append(track_id)
+
+    sp.user_playlist_add_tracks(user=spotify_username, playlist_id=playlist_id, tracks=list_of_tracks_to_add)
+else:
+    print("Can't get token for", spotify_username)
+
+playlist_link_url = playlist['external_urls']
+playlist_link_url = playlist_link_url.get('spotify')
+tweet_str = "Here's a spotify playlist of my most listened to songs in " + month + "\n" + playlist_link_url
+api.update_status(status=tweet_str)
