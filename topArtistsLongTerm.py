@@ -2,7 +2,7 @@
 import spotipy
 import spotipy.util as util
 from twython import Twython
-
+import twitter_handles
 import config
 
 # Twitter API
@@ -24,7 +24,7 @@ api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter
 token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
                                    redirect_uri="http://localhost:8090", scope=userTop)
 
-tweetstr = "My top artists over the years! \n"
+tweetstr = "My #TopArtists over the years! \n"
 
 if token:
     sp = spotipy.Spotify(auth=token)

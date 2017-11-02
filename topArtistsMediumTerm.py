@@ -24,7 +24,7 @@ api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter
 token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
                                    redirect_uri="http://localhost:8090", scope=userTop)
 
-tweetstr = "My top artists over the last 6 months! \n"
+tweetstr = "My #TopArtists over the last 6 months! \n"
 
 if token:
     sp = spotipy.Spotify(auth=token)
