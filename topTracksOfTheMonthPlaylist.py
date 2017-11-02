@@ -69,24 +69,7 @@ if token:
 
     # Iterate through the tracks to get the relevant information
     for track in topTracks['items']:
-
-        # Get name of track
-        song_name = track['name']
-
-        # Get artist name
-        list_of_artists = track['artists']
-        list_of_artists = list_of_artists[0]
-        artist = list_of_artists['name']
-
-        # Combine artist and song name to get a more specific search on spotify
-        song_and_artist = str(artist) + " - " + str(song_name)
-
-        result = sp.search(song_and_artist, limit='1')
-        extract = result['tracks']['items']
-        extract = extract[0]
-        track_id = extract['uri']
-
-        list_of_tracks_to_add.append(track_id)
+        list_of_tracks_to_add.append(track['uri'])
 
     sp.user_playlist_add_tracks(user=spotify_username, playlist_id=playlist_id, tracks=list_of_tracks_to_add)
 else:
