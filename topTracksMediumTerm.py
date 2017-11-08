@@ -11,7 +11,7 @@ twitter_access_token = config.twitter_access_token
 twitter_access_token_secret = config.twitter_access_token_secret
 
 # Spotify API
-userTop = config.spotfiy_user_top
+scope = config.spotify_scope
 spotify_username = config.spotify_username
 client_id = config.spotify_client_id
 client_secret = config.spotfiy_client_secret
@@ -21,7 +21,7 @@ api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter
 
 # Spotify Token
 token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
-                                   redirect_uri="http://localhost:8090", scope=userTop)
+                                   redirect_uri="http://localhost:8090", scope=scope)
 
 tweet_str = "My #TopTracks over the past 6 months! \n"
 

@@ -6,7 +6,7 @@ import spotipy.util as util
 import config
 
 # Spotify API
-userTop = config.spotfiy_user_top
+scope = config.spotify_scope
 spotify_username = config.spotify_username
 client_id = config.spotify_client_id
 client_secret = config.spotfiy_client_secret
@@ -17,7 +17,7 @@ twitter_api_secret = config.twitter_api_secret
 twitter_access_token = config.twitter_access_token
 twitter_access_token_secret = config.twitter_access_token_secret
 
-scope = 'playlist-modify-public user-top-read'
+
 # Spotify Token
 token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
                                    redirect_uri="http://localhost:8090", scope=scope)

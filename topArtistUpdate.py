@@ -19,7 +19,7 @@ last_fm_username = config.lastfm_username
 last_fm_password = config.lastfm_password_hash
 
 # Spotify API
-userTop = config.spotfiy_user_top
+scope = config.spotify_scope
 spotify_username = config.spotify_username
 client_id = config.spotify_client_id
 client_secret = config.spotfiy_client_secret
@@ -34,7 +34,7 @@ user = network.get_user(last_fm_username)
 
 # Spotify Token
 token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
-                                   redirect_uri="http://localhost:8090", scope=userTop)
+                                   redirect_uri="http://localhost:8090", scope=scope)
 
 # Get my top artist
 topArtist = user.get_top_artists(period='7day', limit='1')
