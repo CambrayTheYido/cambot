@@ -36,7 +36,7 @@ if token:
         list_of_artists = list_of_artists[0]
         artist = list_of_artists['name']
 
-        if len(tweet_str) + len(song_name) + len(artist) <= 138:
+        if len(tweet_str) + len(song_name) + len(artist) <= 278:
             tweet_str += str(artist) + " - " + track['name'] + "\n"
         else:
             break

@@ -31,7 +31,7 @@ count = 0
 for x in topalbum:
     album_name = str(x[0])
     count += 1
-    if len(top) + len(album_name) <= 135:
+    if len(top) + len(album_name) + len(str(count)) <= 275:
         top += str(count) + " - " + album_name + "\n"
     else:
         break

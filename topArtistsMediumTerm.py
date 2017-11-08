@@ -31,7 +31,7 @@ if token:
     topArtists = sp.current_user_top_artists(time_range='medium_term')
     for artist in topArtists['items']:
         print(artist['name'])
-        if len(tweetstr) < 130:
+        if len(tweetstr) <= 280:
             tweetstr += artist['name'] + "\n"
         else:
             break
