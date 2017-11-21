@@ -30,9 +30,11 @@ if token:
     sp = spotipy.Spotify(auth=token)
     topArtists = sp.current_user_top_artists(time_range='long_term')
     for artist in topArtists['items']:
-        print(artist['name'])
-        if len(tweetstr) + len(artist['name']) < 280:
-            tweetstr += artist['name'] + "\n"
+        artist_name = str(artist['name'])
+        artist_name = twitter_handles.is_artist_in_dict(artist_name)
+        if len(tweetstr) + len(artist_name) < 279:
+            tweetstr += artist_name + "\n"
+            print(artist_name)
         else:
             break
 

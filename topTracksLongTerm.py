@@ -3,6 +3,7 @@ import spotipy
 import spotipy.util as util
 from twython import Twython
 import config
+import twitter_handles
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -24,6 +25,7 @@ token = util.prompt_for_user_token(username=spotify_username, client_id=client_i
                                    redirect_uri="http://localhost:8090", scope=scope)
 
 tweet_str = "My #TopTracks over the years! \n"
+count = 1
 
 if token:
     sp = spotipy.Spotify(auth=token)
@@ -34,14 +36,18 @@ if token:
         # Get artist name
         list_of_artists = track['artists']
         list_of_artists = list_of_artists[0]
-        artist = list_of_artists['name']
+        artist_name = list_of_artists['name']
+        artist_name = twitter_handles.is_artist_in_dict(artist_name)
 
-        if len(tweet_str) + len(song_name) + len(artist) <= 278:
-            tweet_str += str(artist) + " - " + track['name'] + "\n"
+        string_to_add = str(count) + ". " + str(artist_name) + " - " + str(song_name) + "\n"
+
+        if len(tweet_str) + len(song_name) + len(artist_name) <= 280:
+            tweet_str += string_to_add
+            count+=1
         else:
             break
 
 else:
     print("Can't get token for", spotify_username)
-
+print(tweet_str)
 api.update_status(status=tweet_str)
