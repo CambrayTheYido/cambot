@@ -31,9 +31,10 @@ count = 0
 for x in topalbum:
     album_name = str(x[0])
     count += 1
-    if len(top) + len(album_name) + len(str(count)) <= 275:
-        top += str(count) + " - " + album_name + "\n"
+    add_to_tweet = str(count) + ". " + album_name + "\n"
+    if len(top) + len(add_to_tweet) <= 280:
+        top += add_to_tweet
     else:
         break
-
+print(top)
 api.update_status(status=top)

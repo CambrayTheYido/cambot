@@ -5,6 +5,7 @@ import pylast
 import spotipy
 import spotipy.util as util
 import config
+import twitter_handles
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -45,14 +46,20 @@ for x in topTrack:
 if len(sys.argv) > 1:
     search_str = sys.argv[1]
 else:
-    search_str = search
+    search_str = str(search)
 
 sp = spotipy.Spotify(auth=token)
 result = sp.search(search, limit='1')
 things = result['tracks']['items']
-for tracko in things:
-    url = tracko['external_urls']
+for track in things:
+    url = track['external_urls']
     url = url.get('spotify')
+
+    artist_name = str(track['artists'][0].get('name'))
+    artist_name_with_at = twitter_handles.is_artist_in_dict(artist_name)
+
+    if artist_name.lower() in search_str.lower():
+        search_str = search_str.replace(artist_name, artist_name_with_at, 1)
 
 # Check if the URL has already been tweeted lately, if not then tweet new link
 files = open("topTrackURL.txt", "r")
@@ -62,4 +69,5 @@ for line in files:
         file.write(url)
         file.close
         tweetStr = "#TopTrackUpdate \n" + str(search) + "\n" + str(url)
+        print(tweetStr)
         api.update_status(status=tweetStr)
