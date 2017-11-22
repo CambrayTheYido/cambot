@@ -68,6 +68,6 @@ for line in files:
         file = open("topTrackURL.txt", "w")
         file.write(url)
         file.close
-        tweetStr = "#TopTrackUpdate \n" + str(search) + "\n" + str(url)
-        print(tweetStr)
+        tweetStr = "#TopTrackUpdate \n" + search_str + "\n" + str(url)
+        print("UPDATED STATUS:\n" + tweetStr)
         api.update_status(status=tweetStr)
