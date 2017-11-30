@@ -4,8 +4,9 @@ import pylast
 import spotipy
 import spotipy.util as util
 from twython import Twython
-
+import os
 import config
+import twitter_handles
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -41,7 +42,7 @@ token = util.prompt_for_user_token(username=spotify_username, client_id=client_i
 topAlbum = user.get_top_albums(period='7day', limit='1')
 # Get the album name
 for x in topAlbum:
-    search = x[0]
+    search = str(x[0])
 
 sp = spotipy.Spotify(auth=token)
 result = sp.search(search, type='album', limit='1')
@@ -52,12 +53,17 @@ for album in things:
     url = url.get('spotify')
 
 # Check if the URL has already been tweeted lately, if not then tweet new link
-filename = "topAlbumURL.txt"
-file = open(filename, "r")
+artist_name = twitter_handles.is_artist_in_dict(search.split('-')[0].strip())
+string_to_tweet = search.replace(search.split('-')[0], artist_name + " ")
+
+path = os.getcwd()
+file_name = "topAlbumURL.txt"
+file_name_and_path = path + "\\" + file_name
+file = open(file_name_and_path, "r")
 for line in file:
     if line != url:
-        file = open(filename, "w")
+        file = open(file_name_and_path, "w")
         file.write(url)
         file.close
-        tweetStr = "#TopAlbumUpdate \n" + str(search) + "\n" + str(url)
+        tweetStr = "#TopAlbumUpdate \n" + string_to_tweet + "\n" + str(url)
         api.update_status(status=tweetStr)

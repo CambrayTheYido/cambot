@@ -5,6 +5,8 @@ import spotipy
 import spotipy.util as util
 from twython import Twython
 import config
+import os
+import twitter_handles
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -55,13 +57,16 @@ for artist in things:
     # Extract the URL from the dictionary
     url = url.get('spotify')
 
+artist_name = twitter_handles.is_artist_in_dict(str(search_str))
 # Check if the URL has already been tweeted lately, if not then tweet new link
-filename = "topArtistURL.txt"
-file = open(filename, "r")
+path = os.getcwd()
+file_name = "topArtistURL.txt"
+file_name_and_path = path + "\\" + file_name
+file = open(file_name_and_path, "r")
 for line in file:
     if line != url:
-        file = open(filename, "w")
+        file = open(file_name_and_path, "w")
         file.write(url)
         file.close
-        tweetStr = "#TopArtistUpdate \n" + str(search) + "\n" + str(url)
+        tweetStr = "#TopArtistUpdate \n" + artist_name + "\n" + str(url)
         api.update_status(status=tweetStr)

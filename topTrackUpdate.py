@@ -6,6 +6,7 @@ import spotipy
 import spotipy.util as util
 import config
 import twitter_handles
+import os
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -62,10 +63,13 @@ for track in things:
         search_str = search_str.replace(artist_name, artist_name_with_at, 1)
 
 # Check if the URL has already been tweeted lately, if not then tweet new link
-files = open("topTrackURL.txt", "r")
+path = os.getcwd()
+file_name = "topTrackURL.txt"
+file_name_and_path = path + "\\" + file_name
+files = open(file_name_and_path, "r")
 for line in files:
     if line != url:
-        file = open("topTrackURL.txt", "w")
+        file = open(file_name_and_path, "w")
         file.write(url)
         file.close
         tweetStr = "#TopTrackUpdate \n" + search_str + "\n" + str(url)

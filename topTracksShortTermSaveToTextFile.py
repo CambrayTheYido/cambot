@@ -44,7 +44,7 @@ elif (month == 12):
 
 if token:
     sp = spotipy.Spotify(auth=token)
-    topTracks = sp.current_user_top_tracks(time_range='short_term')
+    topTracks = sp.current_user_top_tracks(time_range='short_term', limit=100)
     for track in topTracks['items']:
         # Get name of track
         song_name = track['name']
