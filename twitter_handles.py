@@ -17,7 +17,8 @@ twitter_handles = {"yotto": "@yottomusic",
                    "sub focus": "@subfocus",
                    "matt lange": "@MattLange",
                    "dimension" : "@dimension_uk",
-                   "attlas" : "@attlas"
+                   "attlas" : "@attlas",
+                   "draft" : "@DraftUK"
                    }
 
 
