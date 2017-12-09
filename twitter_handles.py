@@ -18,7 +18,9 @@ twitter_handles = {"yotto": "@yottomusic",
                    "matt lange": "@MattLange",
                    "dimension" : "@dimension_uk",
                    "attlas" : "@attlas",
-                   "draft" : "@DraftUK"
+                   "draft" : "@DraftUK",
+                   "i_o" : "@i_oofficial",
+                   "grabbitz" : "@grabbitz"
                    }
 
 
