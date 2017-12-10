@@ -58,7 +58,7 @@ string_to_tweet = search.replace(search.split('-')[0], artist_name + " ")
 
 path = os.getcwd()
 file_name = "topAlbumURL.txt"
-file_name_and_path = path + "\\" + file_name
+file_name_and_path = path + "/" + file_name
 file = open(file_name_and_path, "r")
 for line in file:
     if line != url:

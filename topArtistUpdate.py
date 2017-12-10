@@ -61,7 +61,7 @@ artist_name = twitter_handles.is_artist_in_dict(str(search_str))
 # Check if the URL has already been tweeted lately, if not then tweet new link
 path = os.getcwd()
 file_name = "topArtistURL.txt"
-file_name_and_path = path + "\\" + file_name
+file_name_and_path = path + "/" + file_name
 file = open(file_name_and_path, "r")
 for line in file:
     if line != url:
