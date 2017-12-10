@@ -65,7 +65,7 @@ for track in things:
 # Check if the URL has already been tweeted lately, if not then tweet new link
 path = os.getcwd()
 file_name = "topTrackURL.txt"
-file_name_and_path = path + "\\" + file_name
+file_name_and_path = path + "/" + file_name
 files = open(file_name_and_path, "r")
 for line in files:
     if line != url:
