@@ -20,13 +20,15 @@ twitter_handles = {"yotto": "@yottomusic",
                    "attlas" : "@attlas",
                    "draft" : "@DraftUK",
                    "i_o" : "@i_oofficial",
-                   "grabbitz" : "@grabbitz"
+                   "grabbitz" : "@grabbitz",
+                   "kölsch" : "@kolschofficial"
                    }
 
 
 def is_artist_in_dict(artist_name):
+    artist_name = str(artist_name)
     for key, value in twitter_handles.items():
-        if artist_name.lower() == key.lower():
-            artist_name = value
+        if artist_name.lower() == key.lower() or key.lower() in artist_name.lower():
+            artist_name = artist_name.lower().replace(key, value)
             break
     return artist_name

@@ -30,16 +30,11 @@ topTracksWeek = user.get_top_tracks(period='7day')
 count = 1
 for track in topTracksWeek:
     track_and_artist = str(track[0])
-    # Get just the artists name from the combined artist and track string
-    artist_name = track_and_artist.split('-')[0].strip()
-
-    track_title = track_and_artist.split('-')[1].strip()
-
     plays_of_track = str(track[1])
 
-    artist_name = twitter_handles.is_artist_in_dict(artist_name)
+    artist_and_track = twitter_handles.is_artist_in_dict(track_and_artist)
 
-    add_to_tweet = str(count) + ". " + artist_name + " - " + track_title + " (" + plays_of_track + " plays)\n"
+    add_to_tweet = str(count) + ". " + artist_and_track + " (" + plays_of_track + " plays)\n"
 
     if len(add_to_tweet) + len(tweet_str) <= 280:
         tweet_str += add_to_tweet
