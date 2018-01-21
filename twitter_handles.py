@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+#  -*- coding: utf-8 -*-
+
 twitter_handles = {"yotto": "@yottomusic",
                    "deadmau5": "@deadmau5",
                    "eric prydz": "@ericprydz",
@@ -31,4 +34,4 @@ def is_artist_in_dict(artist_name):
         if artist_name.lower() == key.lower() or key.lower() in artist_name.lower():
             artist_name = artist_name.lower().replace(key, value)
             break
-    return artist_name
+    return artist_name.title()
