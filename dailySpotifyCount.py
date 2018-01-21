@@ -81,4 +81,4 @@ else:
 
 tweetStr = "I played " + str(count) + song + "on spotify today.\n" + popular_tags
 print(tweetStr)
-#api.update_status(status=tweetStr)
+api.update_status(status=tweetStr)
