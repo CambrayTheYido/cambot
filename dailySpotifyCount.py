@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import datetime
 import time
-
+import operator
 import pylast
 from twython import Twython
 
@@ -34,7 +34,44 @@ unix_d = time.mktime(d.timetuple())
 
 # list_of_tracks returns the list of tracks played from the beginning of the day the script is run to the exact time the
 # script is run
+
+# List of genres
+genre_list = []
+
 list_of_tracks = user.get_recent_tracks(None, False, time_from=unix_d, time_to=time.time())
+for extract_track_details in list_of_tracks:
+    artist = extract_track_details[0]
+    artist = str(artist).split("-")[0].strip(" ")
+    try:
+        artist_genre = network.get_artist(artist_name=artist).get_top_tags()
+        for genre in artist_genre:
+            genre_to_add = genre[0]
+            genre_list.append(str(genre_to_add))
+    except:
+        continue
+
+genre_count = {}
+for genre in genre_list:
+    if genre not in genre_count:
+        genre_count[genre] = 0
+    genre_count[genre] += 1
+sorted_genre = sorted(genre_count.items(), key=operator.itemgetter(1), reverse=True)
+sorted_genre = dict(sorted_genre)
+popular_tags = "The most popular genres of the songs I listened to today were: "
+counter = 0
+for key in sorted_genre:
+    if counter == 5:
+        # Replace last comma with a full stop
+        popular_tags = popular_tags[:-2]
+        popular_tags += "."
+        break
+    else:
+        if key == "seen live":
+            continue
+        else:
+            popular_tags += str(key).title() + ", "
+            counter += 1
+print(popular_tags)
 # How many spotify songs have been played
 count = len(list_of_tracks)
 if count == 1:
@@ -42,5 +79,6 @@ if count == 1:
 else:
     song = " songs "
 
-tweetStr = "I played " + str(count) + song + "on spotify today."
-api.update_status(status=tweetStr)
+tweetStr = "I played " + str(count) + song + "on spotify today.\n" + popular_tags
+print(tweetStr)
+#api.update_status(status=tweetStr)
