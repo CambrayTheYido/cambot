@@ -51,7 +51,7 @@ for extract_track_details in list_of_tracks:
         continue
 
 genre_count = {}
-disregard_tag = ["seen live"]
+disregard_tag = ["seen live", "live_seen"]
 for genre in genre_list:
     if genre not in genre_count:
         genre_count[genre] = 0
@@ -80,5 +80,5 @@ else:
     song = " songs "
 
 tweetStr = "I played " + str(count) + song + "on spotify today.\n" + popular_tags
-print(tweetStr, flush=True)
+print(tweetStr)
 api.update_status(status=tweetStr)
