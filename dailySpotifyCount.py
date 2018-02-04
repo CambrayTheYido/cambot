@@ -49,31 +49,34 @@ for extract_track_details in list_of_tracks:
             genre_list.append(str(genre_to_add))
     except:
         continue
-
-genre_count = {}
-disregard_tag = ["seen live", "live_seen"]
-for genre in genre_list:
-    if genre not in genre_count:
-        genre_count[genre] = 0
-    genre_count[genre] += 1
-sorted_genre = sorted(genre_count.items(), key=operator.itemgetter(1), reverse=True)
-sorted_genre = dict(sorted_genre)
-popular_tags = "The most popular genres of the songs I listened to today were: "
-counter = 0
-for key in sorted_genre:
-    if counter == 5:
-        # Replace last comma with a full stop
-        popular_tags = popular_tags[:-2]
-        popular_tags += "."
-        break
-    else:
-        if key in disregard_tag:
-            continue
-        else:
-            popular_tags += str(key).title() + ", "
-            counter += 1
 # How many spotify songs have been played
-count = len(list_of_tracks)
+count = len(list_of_tracks) + 1 # starts at 0, so add 1, because... yes
+
+if count > 0:
+    genre_count = {}
+    disregard_tag = ["seen live", "live_seen", "nyc", "Loops3N", "1Live Fiehe", "Nottingham", "Hospital Records Label", "Dnb Stuff", "The Weeknd", "Swag"]
+    for genre in genre_list:
+        if genre not in genre_count:
+            genre_count[genre] = 0
+        genre_count[genre] += 1
+    sorted_genre = sorted(genre_count.items(), key=operator.itemgetter(1), reverse=True)
+    sorted_genre = dict(sorted_genre)
+    popular_tags = "The most popular tags of the songs I listened to today were: "
+    counter = 0
+    for key in sorted_genre:
+        # Depending on number of songs listened to, number of tags to stop at increases with songs listened to.
+        if counter == int(count/8 + 1):
+            # Replace last comma with a full stop
+            popular_tags = popular_tags[:-2]
+            popular_tags += "."
+            break
+        else:
+            if str(key).lower() in [x.lower() for x in disregard_tag]:
+                continue
+            else:
+                popular_tags += str(key).title() + ", "
+                counter += 1
+
 if count == 1:
     song = " song "
 else:
