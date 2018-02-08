@@ -3,6 +3,7 @@ import datetime
 import time
 import operator
 import pylast
+import sys
 from twython import Twython
 
 import config
@@ -54,7 +55,7 @@ count = len(list_of_tracks) + 1 # starts at 0, so add 1, because... yes
 
 if count > 0:
     genre_count = {}
-    disregard_tag = ["seen live", "live_seen", "nyc", "Loops3N", "1Live Fiehe", "Nottingham", "Hospital Records Label", "Dnb Stuff", "The Weeknd", "Swag"]
+    disregard_tag = ["seen live", "live_seen", "nyc", "Loops3N", "1Live Fiehe", "Nottingham", "Hospital Records Label", "Dnb Stuff", "The Weeknd", "Swag", "jihad", "eye q", "Tolistento"]
     for genre in genre_list:
         if genre not in genre_count:
             genre_count[genre] = 0
@@ -84,4 +85,9 @@ else:
 
 tweetStr = "I played " + str(count) + song + "on spotify today.\n" + popular_tags
 print(tweetStr)
-api.update_status(status=tweetStr)
+
+if sys.argv:
+    # test, do not tweet
+    exit(0)
+else:
+    api.update_status(status=tweetStr)
