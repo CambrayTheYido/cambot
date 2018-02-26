@@ -52,7 +52,6 @@ else:
 sp = spotipy.Spotify(auth=token)
 search = "\'" + str(search) + "\'"
 result = sp.search(search, limit='1', type='track')
-print(result)
 things = result['tracks']['items']
 for track in things:
     url = track['external_urls']
@@ -62,7 +61,7 @@ for track in things:
     artist_name_with_at = twitter_handles.is_artist_in_dict(artist_name)
 
     if artist_name.lower() in search_str.lower():
-        search_str = search_str.replace(artist_name, artist_name_with_at, 1)
+        search_str = search_str.replace(artist_name.lower(), artist_name_with_at, 1)
 
 # Check if the URL has already been tweeted lately, if not then tweet new link
 path = os.getcwd()
