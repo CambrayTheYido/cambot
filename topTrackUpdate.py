@@ -50,7 +50,9 @@ else:
     search_str = str(search)
 
 sp = spotipy.Spotify(auth=token)
-result = sp.search(search, limit='1')
+search = "\'" + str(search) + "\'"
+result = sp.search(search, limit='1', type='track')
+print(result)
 things = result['tracks']['items']
 for track in things:
     url = track['external_urls']

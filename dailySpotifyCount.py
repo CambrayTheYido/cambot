@@ -85,9 +85,4 @@ else:
 
 tweetStr = "I played " + str(count) + song + "on spotify today.\n" + popular_tags
 print(tweetStr)
-
-if sys.argv:
-    # test, do not tweet
-    exit(0)
-else:
-    api.update_status(status=tweetStr)
+api.update_status(status=tweetStr)

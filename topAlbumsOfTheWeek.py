@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pylast
 from twython import Twython
-
+import twitter_handles
 import config
 
 # Twitter API
@@ -30,6 +30,7 @@ topalbum = user.get_top_albums(period='7day')
 count = 0
 for x in topalbum:
     album_name = str(x[0])
+    album_name = twitter_handles.is_artist_in_dict(album_name)
     count += 1
     add_to_tweet = str(count) + ". " + album_name + "\n"
     if len(top) + len(add_to_tweet) <= 280:

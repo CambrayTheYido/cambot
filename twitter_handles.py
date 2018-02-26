@@ -24,7 +24,10 @@ twitter_handles = {"yotto": "@yottomusic",
                    "draft" : "@DraftUK",
                    "i_o" : "@i_oofficial",
                    "grabbitz" : "@grabbitz",
-                   "kölsch" : "@kolschofficial"
+                   "kölsch" : "@kolschofficial",
+                   "heyz" : "@heyzmsc",
+                   "max cooper" : "@maxcoopermax",
+                   "layton giordani" : "@LaytonGiordani"
                    }
 
 
@@ -32,6 +35,6 @@ def is_artist_in_dict(artist_name):
     artist_name = str(artist_name)
     for key, value in twitter_handles.items():
         if artist_name.lower() == key.lower() or key.lower() in artist_name.lower():
-            artist_name = artist_name.lower().replace(key, value)
+            artist_name = artist_name.lower().replace(key.lower(), value)
             break
-    return artist_name.title()
+    return ' '.join([word.capitalize() for word in artist_name.split(' ')])

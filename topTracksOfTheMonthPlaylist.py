@@ -4,6 +4,7 @@ import spotipy
 from twython import Twython
 import spotipy.util as util
 import config
+import twitter_handles as t
 
 # Spotify API
 scope = config.spotify_scope
@@ -66,9 +67,16 @@ if token:
     topTracks = sp.current_user_top_tracks(time_range='short_term', limit=50)
 
     list_of_tracks_to_add = []
+    some_artists = []
 
     # Iterate through the tracks to get the relevant information
     for track in topTracks['items']:
+
+        # Store a list of artists to involve in the tweet
+        artist = t.is_artist_in_dict(track['artists'][0].get('name'))
+        if artist not in some_artists:
+            some_artists.append(artist)
+
         list_of_tracks_to_add.append(track['uri'])
 
     sp.user_playlist_add_tracks(user=spotify_username, playlist_id=playlist_id, tracks=list_of_tracks_to_add)
@@ -77,5 +85,10 @@ else:
 
 playlist_link_url = playlist['external_urls']
 playlist_link_url = playlist_link_url.get('spotify')
-tweet_str = "Here's a spotify playlist of my most listened to songs in " + month + "\n" + playlist_link_url
-api.update_status(status=tweet_str)
+tweet_str = "Here's a spotify playlist of my most listened to songs in " + month + "\n" + playlist_link_url + "\n" + "This includes artists such as: "
+for artist in some_artists:
+    if len(tweet_str) + len(artist) <= 280:
+        tweet_str+= artist + ", "
+tweet_str = tweet_str[:-2] + "."
+print(tweet_str)
+#api.update_status(status=tweet_str)

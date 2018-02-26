@@ -44,4 +44,5 @@ if token:
 else:
     print("Can't get token for", spotify_username)
 
+print(tweet_str)
 api.update_status(status=tweet_str)
