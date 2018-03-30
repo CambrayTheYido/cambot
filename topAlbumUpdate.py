@@ -44,6 +44,7 @@ topAlbum = user.get_top_albums(period='7day', limit='1')
 for x in topAlbum:
     search = str(x[0])
 
+url = ""
 sp = spotipy.Spotify(auth=token)
 result = sp.search(search, type='album', limit='1')
 things = result['albums']['items']
