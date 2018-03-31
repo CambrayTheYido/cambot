@@ -53,6 +53,7 @@ sp = spotipy.Spotify(auth=token)
 search = "\'" + str(search) + "\'"
 result = sp.search(search, limit='1', type='track')
 things = result['tracks']['items']
+url = ""
 for track in things:
     url = track['external_urls']
     url = url.get('spotify')
