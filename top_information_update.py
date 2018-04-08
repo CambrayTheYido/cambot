@@ -166,6 +166,9 @@ def top_artist_update():
         else:
             print(NO_UPDATE_NEEDED)
 
-top_track_update()
-top_album_update()
-top_artist_update()
+if sys.argv.__contains__("track"):
+    top_track_update()
+elif sys.argv.__contains__("album"):
+    top_album_update()
+elif sys.argv.__contains__("artist"):
+    top_artist_update()
