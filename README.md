@@ -16,17 +16,9 @@ This runs constantly, checking every 15 seconds if what I am currently listening
 
 This runs once a week on a sunday and collects my top albums I have been listening to on Spotify. This then collects as many albums as it can before hitting the 140 character limit.
 
-### topAlbumUpdate
+### top_information_update.py
 
-This is run every 30 mins and checks if my most listened to album of the last 7 days has changed from what it last tweeted.
-
-### topArtistUpdate
-
-This is run every 30 mins and checks if my most listened to artist of the last 7 days has changed from what it last tweeted.
-
-### topTrackUpdate.py
-
-This is run every 30 mins and checks if my most listened to track of the last 7 days has changed from what it last tweeted.
+This is run every 30 mins and checks if my most listened to artist, track, or artist of the last 7 days has changed from what it last tweeted.
 
 ### topTracksLongTerm.py
 
