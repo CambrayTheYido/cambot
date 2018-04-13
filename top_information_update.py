@@ -7,7 +7,6 @@ import spotipy.util as util
 import config
 import twitter_handles
 import os
-import argparse
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -39,6 +38,8 @@ user = network.get_user(last_fm_username)
 token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
                                    redirect_uri="http://localhost:8090", scope=scope)
 
+sp = spotipy.Spotify(auth=token)
+
 NO_UPDATE_NEEDED = "Information up to date and already tweeted."
 
 def top_track_update():
@@ -46,15 +47,9 @@ def top_track_update():
     topTrack = user.get_top_tracks(period='7day', limit='1')
 
     for x in topTrack:
-        search = x[0]
+        search_str = str(x[0])
 
-    if len(sys.argv) > 1:
-        search_str = sys.argv[1]
-    else:
-        search_str = str(search)
-
-    sp = spotipy.Spotify(auth=token)
-    search = "\'" + str(search) + "\'"
+    search = "\'" + str(search_str) + "\'"
     result = sp.search(search, limit='1', type='track')
     things = result['tracks']['items']
     url = ""
@@ -96,7 +91,6 @@ def top_album_update():
         search = str(x[0])
 
     url = ""
-    sp = spotipy.Spotify(auth=token)
     result = sp.search(search, type='album', limit='1')
     things = result['albums']['items']
     for album in things:
@@ -132,15 +126,9 @@ def top_artist_update():
     topArtist = user.get_top_artists(period='7day', limit='1')
     # Get the artist
     for x in topArtist:
-        search = x[0]
+        search_str = x[0]
 
-    if len(sys.argv) > 1:
-        search_str = sys.argv[1]
-    else:
-        search_str = search
-
-    sp = spotipy.Spotify(auth=token)
-    result = sp.search(search, type='artist', limit='1')
+    result = sp.search(search_str, type='artist', limit='1')
     things = result['artists']['items']
     for artist in things:
         url = artist['external_urls']
@@ -172,3 +160,7 @@ elif sys.argv.__contains__("album"):
     top_album_update()
 elif sys.argv.__contains__("artist"):
     top_artist_update()
+else:
+	top_artist_update()
+	top_track_update()
+	top_album_update()
