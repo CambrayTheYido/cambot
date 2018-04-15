@@ -29,9 +29,8 @@ user = network.get_user(last_fm_username)
 playingTrack = None
 while 1 < 2: #DO YOU GET IT??
     nowPlaying = user.get_now_playing()
-    if nowPlaying == playingTrack:
-        if nowPlaying == "None":
-            time.sleep(15)
+    if nowPlaying == playingTrack or nowPlaying == None:
+        time.sleep(15)
     else:
         playingTrack = user.get_now_playing()
         api.update_status(status="#NowPlaying " + str(playingTrack))
