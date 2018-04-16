@@ -246,7 +246,9 @@ parser.add_argument("--album",
 parser.add_argument("--artist",
                     help="Tweets the top artist from the specified time frame, if it has not already been tweeted recently",
                     default="7day", choices=choices)
-parser.add_argument("-t", "--tweet", help="If this has been entered, then the script will NOT tweet to the account provided.", action="store_true")
+parser.add_argument("-t", "--tweet",
+                    help="If this has been entered, then the script will NOT tweet to the account provided.",
+                    action="store_true")
 args = parser.parse_args()
 
 if args.tweet:
