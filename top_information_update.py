@@ -42,6 +42,7 @@ token = util.prompt_for_user_token(username=spotify_username, client_id=client_i
 sp = spotipy.Spotify(auth=token)
 
 NO_UPDATE_NEEDED = "Information up to date and already tweeted."
+TWEET_STATUS_UPDATE = True
 
 
 def top_track_update(period):
@@ -98,7 +99,10 @@ def top_track_update(period):
         tweetStr = topTrackTimeFrame + "\n\n" + search_str + "\n" + str(url)
         print(tweetStr, flush=True)
         try:
-            api.update_status(status=tweetStr)
+            if TWEET_STATUS_UPDATE:
+                api.update_status(status=tweetStr)
+                # Just to reduce the spam load a little.
+                time.sleep(5)
         except:
             print("Could not tweet latest track update", flush=True)
     else:
@@ -157,7 +161,10 @@ def top_album_update(period):
         tweetStr = topAlbumTimeFrame + "\n\n" + search + "\n" + str(url)
         print(tweetStr, flush=True)
         try:
-            api.update_status(status=tweetStr)
+            if TWEET_STATUS_UPDATE:
+                api.update_status(status=tweetStr)
+                # Just to reduce the spam load a little.
+                time.sleep(5)
         except:
             print("Could not tweet latest track update", flush=True)
     else:
@@ -216,7 +223,10 @@ def top_artist_update(period):
         tweetStr = topArtistTimeFrame + "\n\n" + search_str + "\n" + str(url)
         print(tweetStr, flush=True)
         try:
-            api.update_status(status=tweetStr)
+            if TWEET_STATUS_UPDATE:
+                api.update_status(status=tweetStr)
+                # Just to reduce the spam load a little.
+                time.sleep(5)
         except:
             print("Could not tweet latest Artist update", flush=True)
     else:
@@ -236,15 +246,19 @@ parser.add_argument("--album",
 parser.add_argument("--artist",
                     help="Tweets the top artist from the specified time frame, if it has not already been tweeted recently",
                     default="7day", choices=choices)
+parser.add_argument("-t", "--tweet", help="If this has been entered, then the script will NOT tweet to the account provided.", action="store_true")
 args = parser.parse_args()
 
+if args.tweet:
+    TWEET_STATUS_UPDATE = False
+    print("Tweeting has been disabled", flush=True)
 if (args.track):
     if args.track == "all":
         for period in choices:
             if period == "all":
                 break
             top_track_update(period)
-            time.sleep(10)
+
     else:
         top_track_update(args.track)
 
@@ -254,7 +268,7 @@ if (args.artist):
             if period == "all":
                 break
             top_artist_update(period)
-            time.sleep(10)
+
     else:
         top_artist_update(args.artist)
 
@@ -264,6 +278,6 @@ if (args.album):
             if period == "all":
                 break
             top_album_update(period)
-            time.sleep(10)
+
     else:
         top_album_update(args.album)
