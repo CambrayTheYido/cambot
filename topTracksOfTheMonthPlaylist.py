@@ -53,7 +53,7 @@ elif (month == 11):
 elif (month == 12):
     month = "December"
 
-playlist_name = "Top tracks of " + month + " " +str(now.year)
+playlist_name = "Top tracks of {} {}".format(month, now.year)
 
 if token:
     sp = spotipy.Spotify(auth=token)

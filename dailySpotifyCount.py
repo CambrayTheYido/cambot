@@ -75,7 +75,7 @@ if count > 0:
             if str(key).lower() in [x.lower() for x in disregard_tag]:
                 continue
             else:
-                popular_tags += str(key).title() + ", "
+                popular_tags += "#" + str(key).title().replace(" ", "") + ", "
                 counter += 1
 
 if count == 1:
@@ -83,6 +83,6 @@ if count == 1:
 else:
     song = " songs "
 
-tweetStr = "I played " + str(count) + song + "on spotify today.\n" + popular_tags
+tweetStr = "I played {}{} on spotify today.\n{}".format(count, song, popular_tags)
 print(tweetStr)
 api.update_status(status=tweetStr)
