@@ -83,6 +83,6 @@ if count == 1:
 else:
     song = " songs "
 
-tweetStr = "I played {}{} on spotify today.\n{}".format(count, song, popular_tags)
+tweetStr = "I listened to{}{}today.\n{}".format(count, song, popular_tags)
 print(tweetStr)
 api.update_status(status=tweetStr)
