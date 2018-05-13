@@ -27,7 +27,8 @@ twitter_handles = {"yotto": "@yottomusic",
                    "kölsch" : "@kolschofficial",
                    "HEYz" : "@heyzmsc",
                    "max cooper" : "@maxcoopermax",
-                   "layton giordani" : "@LaytonGiordani"
+                   "layton giordani" : "@LaytonGiordani",
+                   "ocula" : "@OCULAmusic"
                    }
 
 

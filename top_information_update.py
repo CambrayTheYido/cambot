@@ -254,7 +254,7 @@ args = parser.parse_args()
 if args.tweet:
     TWEET_STATUS_UPDATE = False
     print("Tweeting has been disabled", flush=True)
-if (args.track):
+if args.track:
     if args.track == "all":
         for period in choices:
             if period == "all":
@@ -264,7 +264,7 @@ if (args.track):
     else:
         top_track_update(args.track)
 
-if (args.artist):
+if args.artist:
     if args.artist == "all":
         for period in choices:
             if period == "all":
@@ -274,7 +274,7 @@ if (args.artist):
     else:
         top_artist_update(args.artist)
 
-if (args.album):
+if args.album:
     if args.album == "all":
         for period in choices:
             if period == "all":
