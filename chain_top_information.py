@@ -8,6 +8,7 @@ import spotipy.util as util
 import twitter_handles
 import datetime
 from dateutil.relativedelta import *
+from time import sleep
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -55,13 +56,29 @@ time_frames = {'7day': 'week',
 
 PLAYS = " plays\n"
 
+def get_latest_tweet():
+    tweet = api.get_user_timeline(screen_name="BotCambray")
+    return tweet[0].get('id')
+
+
 def gather_relevant_information_to_request(type, time_frame, amount_of_tweets):
     if type == 'artist':
         # determine period to use
         top = user.get_top_artists(period=time_frame)
-        beginning_of_tweet = "#TopArtists of the last {}".format([value for key, value in time_frames.items() if time_frame in key.lower()])
-        add_to_tweet = get_top_artist_information(top, amount_of_tweets)
-        tweet = beginning_of_tweet + add_to_tweet
+        first_tweet = "#TopArtists of the last {}".format([value for key, value in time_frames.items() if time_frame in key.lower()][0])
+        print(first_tweet, flush=True)
+
+        # Tweet the first tweet to get the ball rolling, grab the ID of the tweet while we're at it
+        api.update_status(status=first_tweet)
+        latest_tweet = get_latest_tweet()
+
+        count = 1
+        # Now we can chain the following tweets onto the first tweet
+        while count < amount_of_tweets:
+            get_top_artist_information(top, count, latest_tweet)
+            latest_tweet = get_latest_tweet()
+            count+=1
+
     elif type == 'track':
         top = user.get_top_tracks(period=time_frame)
 
@@ -69,31 +86,30 @@ def gather_relevant_information_to_request(type, time_frame, amount_of_tweets):
     elif type == 'album':
         top = user.get_top_albums(period=time_frame)
 
-    api.update_status(status=tweet)
+    #api.update_status(status=tweet)
 
-def search_spotify(search_string):
-    result = sp.search(search_string, limit='1')
-    result = result['tracks']['items']
+def search_spotify(search_string, type):
+    result = sp.search(search_string, limit='1', type=type)
+    result = result['artists']['items']
     url = ''
     for item in result:
         url = item['external_urls']
         url = url.get('spotify')
     return url
 
-def get_top_artist_information(list_of_artists, tweet_count):
-    for x in list_of_artists:
-        if count > tweet_count:
-            break
+def get_top_artist_information(list_of_artists, tweet_count, latest_tweet):
+    for artist in list_of_artists:
 
-        artist_name = str(x[0])
-        artist_name = twitter_handles.is_artist_in_dict(artist_name)
+        artist_name = str(artist[0])
+        #artist_name = twitter_handles.is_artist_in_dict(artist_name)
+        playcount = str(artist[1])
 
-        count = 1
+        add_to_tweet = "{}. {} - {}{} \n\n{}".format(tweet_count, artist_name, playcount, PLAYS, search_spotify(artist_name, 'artist'))
+        api.update_status(status=add_to_tweet, in_reply_to_status_id=latest_tweet)
+        sleep(10)
 
-        playcount = str(x[1])
-
-        add_to_tweet = str(count) + ". " + artist_name + " - " + playcount + PLAYS + search_spotify(artist_name)
-        api.update_status(status=add_to_tweet)
+        print(add_to_tweet, flush=True)
+        tweet_count += 1
 
 choices = ["7day", "1month", "3month", "6month", "12month", "overall"]
 
@@ -110,5 +126,7 @@ parser.add_argument("--artists",
 
 args = parser.parse_args()
 
-if args.artists:
-    gather_relevant_information_to_request('artist', args.artists, 10)
+artist = args.artists
+
+if artist:
+    gather_relevant_information_to_request('artist', artist, 10)
