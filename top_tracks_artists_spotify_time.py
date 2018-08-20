@@ -74,7 +74,8 @@ def get_top_tracks(time_range):
             list_of_artists = list_of_artists[0]
             artist = list_of_artists['name']
 
-            artist = t.is_artist_in_dict(artist)
+            if include_artist_twitter_handle:
+                artist = t.is_artist_in_dict(artist)
 
             if len(tweet_str) + len(song_name) + len(artist) <= 278:
                 tweet_str += str(artist) + " - " + track['name'] + "\n"
@@ -98,51 +99,59 @@ terms = [short_term, medium_term, long_term]
 TWEET_STATUS_UPDATE = True
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--short", help="Tweets top information from the past month", default="track",
-                    choices=choices)
-parser.add_argument("-m", "--medium", help="Tweets top information from the past 6 months", default="track",
-                    choices=choices, dest="medium")
-parser.add_argument("-l", "--long", help="Tweets top information from the past few years", default="track",
+parser.add_argument("-s", "--shortterm", help="Tweets top information from the past month", default="track",
+                    choices=choices, dest="shortterm")
+parser.add_argument("-m", "--mediumterm", help="Tweets top information from the past 6 months", default="track",
+                    choices=choices, dest="mediumterm")
+parser.add_argument("-l", "--longterm", help="Tweets top information from the past few years", default="track",
                     choices=choices)
 parser.add_argument("-t", "--tweet",
                     help="If this has been entered, then the script will NOT tweet to the account provided.",
                     action="store_true")
+parser.add_argument("-a", "--at",
+                    help="Include this at runtime to replace mentions of artists names with their twitter handles (if they are stored)",
+                    action="store_true")
 args = parser.parse_args()
-print(args)
 
-if args.tweet:
+tweet = args.tweet
+include_artist_twitter_handle = args.at
+shortterm = args.shortterm
+mediumterm = args.mediumterm
+longterm = args.longterm
+
+if tweet:
     TWEET_STATUS_UPDATE = False
     print("Tweeting has been disabled", flush=True)
 
-if args.short:
-    if args.short == "all":
+
+if shortterm:
+    if shortterm == "all":
         get_top_artists(short_term)
         get_top_tracks(short_term)
     else:
-        for args in args.short:
-            if args == "track":
+        for arguments in shortterm:
+            if arguments == "track":
                 get_top_tracks(short_term)
-            if args == "artist":
+            if arguments == "artist":
                 get_top_artists(short_term)
 
-if args.medium:
-    if args.medium == "all":
+if mediumterm:
+    if mediumterm == "all":
         get_top_tracks(medium_term)
         get_top_artists(medium_term)
     else:
-        for args in args.medium:
-            if args == "track":
-                get_top_tracks(medium_term)
-            if args == "artist":
-                get_top_artists(medium_term)
+        if arguments == "track":
+            get_top_tracks(medium_term)
+        elif arguments == "artist":
+            get_top_artists(medium_term)
 
-if args.long:
-    if args.long == "all":
+if longterm:
+    if longterm == "all":
         get_top_tracks(long_term)
         get_top_artists(long_term)
     else:
-        for args in args.long:
-            if args == "track":
+        for arguments in longterm:
+            if arguments == "track":
                 get_top_tracks(long_term)
-            if args == "artist":
+            if arguments == "artist":
                 get_top_artists(long_term)
