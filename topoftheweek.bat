@@ -1,0 +1,1 @@
+python topArtistsOfTheWeek.py && python topTracksOfTheWeek.py && python topAlbumsOfTheWeek.py
