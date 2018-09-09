@@ -39,3 +39,19 @@ def is_artist_in_dict(artist_name):
             artist_name = artist_name.lower().replace(key.lower(), value)
             break
     return ' '.join([word.capitalize() for word in artist_name.split(' ')])
+
+def search_spotify(sp_instance, search_string, type):
+    result = sp_instance.search(search_string, limit='1', type=type)
+    if type == 'artist':
+        result = result['artists']['items']
+    elif type == 'track':
+        result = result['tracks']['items']
+    elif type == 'album':
+        result = result['albums']['items']
+    url = ''
+    for item in result:
+        url = item['external_urls']
+        url = url.get('spotify')
+    if url == '':
+        print('No results found in spotify search for {}'.format(search_string), flush=True)
+    return url
