@@ -61,6 +61,7 @@ time_frames = {'7day': 'week',
 PLAYS = " plays\n"
 
 tweet = True
+add_to_database = False
 
 NO_UPDATE_NEEDED = "Information up to date and already tweeted."
 
@@ -70,7 +71,6 @@ def get_latest_tweet():
     while the_latest_tweet is None:
         the_latest_tweet = api.get_user_timeline(screen_name="BotCambray")
         the_latest_tweet = the_latest_tweet[0].get('id')
-    print("Found latest tweet: {}".format(the_latest_tweet))
     return the_latest_tweet
 
 def singular_top_artist_update(period, top):
@@ -253,7 +253,7 @@ def gather_relevant_information(type, time_frame, limit):
         top = user.get_top_tracks(period=time_frame, limit=limit)
 
         if limit > 1:
-            first_tweet = "My top {} listened to #Tracks of the last {}".format(limit,
+            first_tweet = "My top {} most listened to #Tracks of the last {}".format(limit,
                 [value for key, value in time_frames.items() if time_frame in key.lower()][0])
             print(first_tweet, flush=True)
 
@@ -269,7 +269,7 @@ def gather_relevant_information(type, time_frame, limit):
         top = user.get_top_albums(period=time_frame, limit=limit)
 
         if limit > 1:
-            first_tweet = "My top {} listened to #Albums of the last {}".format(limit,
+            first_tweet = "My top {} most listened to #Albums of the last {}".format(limit,
                 [value for key, value in time_frames.items() if time_frame in key.lower()][0])
             print(first_tweet, flush=True)
 
@@ -280,9 +280,6 @@ def gather_relevant_information(type, time_frame, limit):
             chain_updates(top, latest_tweet, type)
         else:
             singular_top_album_update(time_frame, top)
-
-    if tweet:
-        api.update_status(status=tweet)
 
 def search_spotify(search_string, type):
     result = sp.search(search_string, limit='1', type=type)
@@ -304,20 +301,20 @@ def chain_updates(list_of_top_items, latest_tweet, type):
     tweet_count = 1
     for top_item in list_of_top_items:
 
+        track_artist_album_search = str(top_item[0])
         track_artist_album = str(top_item[0])
-        if include_twitter_handles:
-            track_artist_album = twitter_handles.is_artist_in_dict(track_artist_album)
+        if include_twitter_handles and type == 'artist':
+            track_artist_album = twitter_handles.check_or_add_artist_names_to_database(track_artist_album, add_to_database)
         playcount = str(top_item[1])
 
         add_to_tweet = "{}. {} - {}{} \n{}".format(tweet_count, track_artist_album, playcount, PLAYS,
-                                                   search_spotify(track_artist_album, type))
-        if tweet and add_to_tweet != 'true':
+                                                   search_spotify(track_artist_album_search, type))
+        if tweet and add_to_tweet != 'True':
 
             api.update_status(status=add_to_tweet, in_reply_to_status_id=latest_tweet)
             latest_tweet = get_latest_tweet()
             sleep(30)
 
-        print("latest tweet {}".format(latest_tweet), flush=True)
         print(add_to_tweet, flush=True)
 
         tweet_count += 1
@@ -343,8 +340,7 @@ parser.add_argument("--artists",
                     help="Tweets the top artists from the specified time frame and, if the limit is larger than one, chains the tweets in a thread. Else it just tweets a singular update if the item has changed since you last ran the script",
                     choices=choices)
 parser.add_argument("-a", "--at",
-                    help="Include this at runtime to replace mentions of artists names with their twitter handles (if they are stored)",
-                    action="store_true")
+                    help="Include this at runtime to replace mentions of artists names with their twitter handles. If add is selected, you will be prompted to enter twitter handles of the corresponding artist if it was not found in the database.", default="leave", choices=['add', 'leave'])
 parser.add_argument("-t", "--tweet",
                     help="Used to turn tweeting off, usually used for testing purposes",
                     action="store_true")
@@ -365,6 +361,9 @@ if tweet_args:
     print('Tweeting has been disabled', flush=True)
 if include_twitter_handles:
     print('Artists names will be replaced with their twitter handle', flush=True)
+    if include_twitter_handles == "add":
+        # Add to the database
+        add_to_database = True
 
 if artist != None:
     if artist == "all":
