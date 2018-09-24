@@ -104,6 +104,8 @@ def singular_top_artist_update(period, top):
 
     file_name_and_path = path + "\\" + file_name
 
+    search_str = twitter_handles.check_or_add_artist_names_to_database(search_str, add_to_database)
+
     file = open(file_name_and_path, "a+")
     file.seek(0)
 
