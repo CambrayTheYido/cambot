@@ -302,11 +302,19 @@ def search_spotify(search_string, type):
 def chain_updates(list_of_top_items, latest_tweet, type):
     tweet_count = 1
     for top_item in list_of_top_items:
-
         track_artist_album_search = str(top_item[0])
-        track_artist_album = str(top_item[0])
-        if include_twitter_handles and type == 'artist':
-            track_artist_album = twitter_handles.check_or_add_artist_names_to_database(track_artist_album, add_to_database)
+
+        # For tracks and albums, we need to extract the part which is the artist and then replace with their handle
+        if type == 'track' or type == 'album' and include_twitter_handles:
+            top_item_split = str(top_item[0]).split('-')
+            rest_of_split = str(top_item_split[1:][0])
+            artist_extract = str(top_item_split[0]).strip()
+            artist_extract = twitter_handles.check_or_add_artist_names_to_database(artist_extract, add_to_database)
+            track_artist_album = str(artist_extract) + " - " + str(rest_of_split)
+        else:
+            track_artist_album = str(top_item[0])
+            if include_twitter_handles and type == 'artist':
+                track_artist_album = twitter_handles.check_or_add_artist_names_to_database(track_artist_album, add_to_database)
         playcount = str(top_item[1])
 
         add_to_tweet = "{}. {} - {}{} \n{}".format(tweet_count, track_artist_album, playcount, PLAYS,
