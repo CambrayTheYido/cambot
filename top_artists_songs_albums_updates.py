@@ -205,8 +205,10 @@ def search_spotify(search_string, type):
 
 # Pass the top item list
 def replace_top_item_artist_with_handle(top_item):
-    top_item_split = str(top_item[0]).split('-')
-    rest_of_split = str(top_item_split[1:][0])
+    print(top_item)
+    top_item_split = str(top_item[0]).split('-', maxsplit=1)
+    rest_of_split = str(top_item_split[1])
+    print(rest_of_split)
     artist_extract = str(top_item_split[0]).strip()
     artist_extract = twitter_handles.check_or_add_artist_names_to_database(artist_extract, add_to_database)
     return str(artist_extract) + " -" + str(rest_of_split)
