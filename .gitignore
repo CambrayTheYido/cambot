@@ -2,5 +2,6 @@
 /config.py
 /__pycache__
 /.cache-cambraytheyido
+/*.cambot
 /.idea
 /topAlbumURL.txt

@@ -50,6 +50,8 @@ age_of_account_in_years_months = str(relativedelta(datetime.date.today(), age_of
     relativedelta(datetime.date.today(), age_of_account_in_years_months).months) \
                                  + ' months'
 
+print(age_of_account_in_years_months)
+
 time_frames = {'7day': 'week',
                '1month': 'month',
                '3month': '3 months',
@@ -73,36 +75,44 @@ def get_latest_tweet():
         the_latest_tweet = the_latest_tweet[0].get('id')
     return the_latest_tweet
 
-def singular_top_artist_update(period, top):
-    for x in top:
-        search_str = str(x[0])
+def get_relevant_time_frame_information(type, time_frame):
+    if time_frame == "7day":
+        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
+        time_frame_tweet_string = "New #Top{}Update of the week".format(type.title(), time_frame)
+    elif time_frame == "1month":
+        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
+        time_frame_tweet_string = "New #Top{}Update of the month".format(type.title(), time_frame)
+    elif time_frame == "3month":
+        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
+        time_frame_tweet_string = "New #Top{}Update of the last 3 months".format(type.title(), time_frame)
+    elif time_frame == "6month":
+        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
+        time_frame_tweet_string = "New #Top{}Update of the last 6 months".format(type.title(), time_frame)
+    elif time_frame == "12month":
+        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
+        time_frame_tweet_string = "New #Top{}Update of the last year".format(type.title(), time_frame)
+    elif time_frame == "overall":
+        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
+        time_frame_tweet_string = "New #Top{}Update of all time ({})".format(type.title(), age_of_account_in_years_months)
+    return [file_name, time_frame_tweet_string]
 
-    artist_url = search_spotify(search_str, 'artist')
+def singular_top_update(period, top, type):
+    x = top[0]
+    search_str = str(x[0])
+    if type == "album" or type == "track":
+        tweetable_string = replace_top_item_artist_with_handle(x)
+    else:
+        tweetable_string = twitter_handles.check_or_add_artist_names_to_database(search_str, add_to_database)
+
+    item_url = search_spotify(search_str, 'artist')
 
     # Check if the information has already been tweeted lately, if not then tweet new update
     path = os.getcwd()
 
     # find out which file we are checking for the time frame chosen
-    if period == "7day":
-        file_name = "topArtistUpdate7day.txt"
-        top_artist_time_frame = "#TopArtistOfTheWeekUpdate"
-    elif period == "1month":
-        file_name = "topArtistUpdate1month.txt"
-        top_artist_time_frame = "New #TopArtistUpdate of the month"
-    elif period == "3month":
-        file_name = "topArtistUpdate3month.txt"
-        top_artist_time_frame = "New #TopArtistUpdate of the last 3 months"
-    elif period == "6month":
-        file_name = "topArtistUpdate6month.txt"
-        top_artist_time_frame = "New #TopArtistUpdate of the last 6 months"
-    elif period == "12month":
-        file_name = "topArtistUpdate12month.txt"
-        top_artist_time_frame = "New #TopArtistUpdate of the last year"
-    elif period == "overall":
-        file_name = "topArtistUpdateOverall.txt"
-        top_artist_time_frame = "New #TopArtistUpdate of all time (tracking since Jun 2016)"
+    file_name_and_time_frame_tweet_string = get_relevant_time_frame_information(type, period)
 
-    file_name_and_path = path + "\\" + file_name
+    file_name_and_path = path + "\\" + file_name_and_time_frame_tweet_string[0]
 
     search_str = twitter_handles.check_or_add_artist_names_to_database(search_str, add_to_database)
 
@@ -114,7 +124,7 @@ def singular_top_artist_update(period, top):
         file = open(file_name_and_path, "w+")
         file.write(search_str)
         file.close()
-        tweetStr = top_artist_time_frame + "\n\n" + search_str + "\n" + str(artist_url)
+        tweetStr = file_name_and_time_frame_tweet_string[1] + "\n\n" + tweetable_string + "\n" + str(item_url)
         print(tweetStr, flush=True)
         try:
             if tweet:
@@ -122,111 +132,7 @@ def singular_top_artist_update(period, top):
                 # Just to reduce the spam load a little.
                 sleep(5)
         except:
-            print("Could not tweet latest Artist update", flush=True)
-    else:
-        print(NO_UPDATE_NEEDED, flush=True)
-        file.close()
-
-def singular_top_track_update(period, top):
-    for x in top:
-        search_str = str(x[0])
-
-    track_url = search_spotify(search_str, 'track')
-
-    # Check if the information has already been tweeted lately, if not then tweet new update
-    path = os.getcwd()
-
-    # find out which file we are checking for the time frame chosen
-    if period == "7day":
-        file_name = "topTrackUpdate7day.txt"
-        top_track_time_frame = "#TopTrackOfTheWeekUpdate"
-    elif period == "1month":
-        file_name = "topTrackUpdate1month.txt"
-        top_track_time_frame = "New #TopTrackUpdate of the month"
-    elif period == "3month":
-        file_name = "topTrackUpdate3month.txt"
-        top_track_time_frame = "New #TopTrackUpdate of the last 3 months"
-    elif period == "6month":
-        file_name = "topTrackUpdate6month.txt"
-        top_track_time_frame = "New #TopTrackUpdate of the last 6 months"
-    elif period == "12month":
-        file_name = "topTrackUpdate12month.txt"
-        top_track_time_frame = "New #TopTrackUpdate of the last year"
-    elif period == "overall":
-        file_name = "topTrackUpdateOverall.txt"
-        top_track_time_frame = "New #TopTrackUpdate of all time (tracking since Jun 2016)"
-
-    file_name_and_path = path + "\\" + file_name
-
-    file = open(file_name_and_path, "a+")
-    file.seek(0)
-
-    if file.read() != search_str:
-        file.close()
-        file = open(file_name_and_path, "w+")
-        file.write(search_str)
-        file.close()
-        tweet_str = top_track_time_frame + "\n\n" + search_str + "\n" + str(track_url)
-        print(tweet_str, flush=True)
-        try:
-            if tweet:
-                api.update_status(status=tweet_str)
-                # Just to reduce the spam load a little.
-                sleep(5)
-        except:
-            print("Could not tweet latest track update", flush=True)
-    else:
-        print(NO_UPDATE_NEEDED, flush=True)
-        file.close()
-
-def singular_top_album_update(period, top):
-    for x in top:
-        search = str(x[0])
-
-    album_url = search_spotify(search, 'album')
-
-    # Check if the information has already been tweeted lately, if not then tweet new update
-    path = os.getcwd()
-
-    # find out which file we are checking for the time frame chosen
-    if period == "7day":
-        file_name = "topAlbumUpdate7day.txt"
-        top_album_time_frame = "#TopAlbumOfTheWeekUpdate"
-    elif period == "1month":
-        file_name = "topAlbumUpdate1month.txt"
-        top_album_time_frame = "New #TopAlbumUpdate of the month"
-    elif period == "3month":
-        file_name = "topAlbumUpdate3month.txt"
-        top_album_time_frame = "New #TopAlbumUpdate of the last 3 months"
-    elif period == "6month":
-        file_name = "topAlbumUpdate6month.txt"
-        top_album_time_frame = "New #TopAlbumUpdate of the last 6 months"
-    elif period == "12month":
-        file_name = "topAlbumUpdate12month.txt"
-        top_album_time_frame = "New #TopAlbumUpdate of the last year"
-    elif period == "overall":
-        file_name = "topAlbumUpdateOverall.txt"
-        top_album_time_frame = "New #TopAlbumUpdate of all time (tracking since Jun 2016)"
-
-    file_name_and_path = path + "\\" + file_name
-
-    file = open(file_name_and_path, "a+")
-    file.seek(0)
-
-    if file.read() != search:
-        file.close()
-        file = open(file_name_and_path, "w+")
-        file.write(search)
-        file.close()
-        tweetStr = top_album_time_frame + "\n\n" + search + "\n" + str(album_url)
-        print(tweetStr, flush=True)
-        try:
-            if tweet:
-                api.update_status(status=tweetStr)
-                # Just to reduce the spam load a little.
-                sleep(5)
-        except:
-            print("Could not tweet latest track update", flush=True)
+            print("Could not tweet latest {} update".format(type), flush=True)
     else:
         print(NO_UPDATE_NEEDED, flush=True)
         file.close()
@@ -249,7 +155,7 @@ def gather_relevant_information(type, time_frame, limit):
             # Now we can chain the following tweets onto the first tweet
             chain_updates(top, latest_tweet, type)
         else:
-            singular_top_artist_update(time_frame, top)
+            singular_top_update(time_frame, top, type)
 
     elif type == 'track':
         top = user.get_top_tracks(period=time_frame, limit=limit)
@@ -265,7 +171,7 @@ def gather_relevant_information(type, time_frame, limit):
 
             chain_updates(top, latest_tweet, type)
         else:
-            singular_top_track_update(time_frame, top)
+            singular_top_update(time_frame, top, type)
 
     elif type == 'album':
         top = user.get_top_albums(period=time_frame, limit=limit)
@@ -281,7 +187,7 @@ def gather_relevant_information(type, time_frame, limit):
 
             chain_updates(top, latest_tweet, type)
         else:
-            singular_top_album_update(time_frame, top)
+            singular_top_update(time_frame, top, type)
 
 def search_spotify(search_string, type):
     result = sp.search(search_string, limit='1', type=type)
@@ -299,6 +205,14 @@ def search_spotify(search_string, type):
         print('No results found in spotify search for {}'.format(search_string), flush=True)
     return url
 
+# Pass the top item list
+def replace_top_item_artist_with_handle(top_item):
+    top_item_split = str(top_item[0]).split('-')
+    rest_of_split = str(top_item_split[1:][0])
+    artist_extract = str(top_item_split[0]).strip()
+    artist_extract = twitter_handles.check_or_add_artist_names_to_database(artist_extract, add_to_database)
+    return str(artist_extract) + " - " + str(rest_of_split)
+
 def chain_updates(list_of_top_items, latest_tweet, type):
     tweet_count = 1
     for top_item in list_of_top_items:
@@ -306,11 +220,7 @@ def chain_updates(list_of_top_items, latest_tweet, type):
 
         # For tracks and albums, we need to extract the part which is the artist and then replace with their handle
         if type == 'track' or type == 'album' and include_twitter_handles:
-            top_item_split = str(top_item[0]).split('-')
-            rest_of_split = str(top_item_split[1:][0])
-            artist_extract = str(top_item_split[0]).strip()
-            artist_extract = twitter_handles.check_or_add_artist_names_to_database(artist_extract, add_to_database)
-            track_artist_album = str(artist_extract) + " - " + str(rest_of_split)
+            track_artist_album = replace_top_item_artist_with_handle(top_item)
         else:
             track_artist_album = str(top_item[0])
             if include_twitter_handles and type == 'artist':

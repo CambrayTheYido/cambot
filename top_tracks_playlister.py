@@ -114,7 +114,7 @@ def create_playlist(time_range, limit):
             tweet_str += artist + ", "
     tweet_str = tweet_str[:-2] + "."
     print(tweet_str)
-    #api.update_status(status=tweet_str)
+    api.update_status(status=tweet_str)
 
 
 def check_number(value):
