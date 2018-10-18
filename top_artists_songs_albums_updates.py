@@ -50,8 +50,6 @@ age_of_account_in_years_months = str(relativedelta(datetime.date.today(), age_of
     relativedelta(datetime.date.today(), age_of_account_in_years_months).months) \
                                  + ' months'
 
-print(age_of_account_in_years_months)
-
 time_frames = {'7day': 'week',
                '1month': 'month',
                '3month': '3 months',
@@ -104,7 +102,7 @@ def singular_top_update(period, top, type):
     else:
         tweetable_string = twitter_handles.check_or_add_artist_names_to_database(search_str, add_to_database)
 
-    item_url = search_spotify(search_str, 'artist')
+    item_url = search_spotify(search_str, type)
 
     # Check if the information has already been tweeted lately, if not then tweet new update
     path = os.getcwd()
@@ -211,7 +209,7 @@ def replace_top_item_artist_with_handle(top_item):
     rest_of_split = str(top_item_split[1:][0])
     artist_extract = str(top_item_split[0]).strip()
     artist_extract = twitter_handles.check_or_add_artist_names_to_database(artist_extract, add_to_database)
-    return str(artist_extract) + " - " + str(rest_of_split)
+    return str(artist_extract) + " -" + str(rest_of_split)
 
 def chain_updates(list_of_top_items, latest_tweet, type):
     tweet_count = 1
