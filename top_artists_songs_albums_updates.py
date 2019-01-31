@@ -10,6 +10,12 @@ import datetime
 from dateutil.relativedelta import *
 from time import sleep
 import os
+import pymongo
+
+# PyMongo
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+
+mydb = myclient["mydatabase"]
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -75,24 +81,18 @@ def get_latest_tweet():
 
 def get_relevant_time_frame_information(type, time_frame):
     if time_frame == "7day":
-        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
         time_frame_tweet_string = "New #Top{}Update of the week".format(type.title(), time_frame)
     elif time_frame == "1month":
-        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
         time_frame_tweet_string = "New #Top{}Update of the month".format(type.title(), time_frame)
     elif time_frame == "3month":
-        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
         time_frame_tweet_string = "New #Top{}Update of the last 3 months".format(type.title(), time_frame)
     elif time_frame == "6month":
-        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
         time_frame_tweet_string = "New #Top{}Update of the last 6 months".format(type.title(), time_frame)
     elif time_frame == "12month":
-        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
         time_frame_tweet_string = "New #Top{}Update of the last year".format(type.title(), time_frame)
     elif time_frame == "overall":
-        file_name = "top{}Update{}.cambot".format(type.title(), time_frame)
         time_frame_tweet_string = "New #Top{}Update of all time ({})".format(type.title(), age_of_account_in_years_months)
-    return [file_name, time_frame_tweet_string]
+    return time_frame_tweet_string
 
 def singular_top_update(period, top, type):
     x = top[0]
@@ -102,38 +102,42 @@ def singular_top_update(period, top, type):
     else:
         tweetable_string = twitter_handles.check_or_add_artist_names_to_database(search_str, add_to_database)
 
-    item_url = search_spotify(search_str, type)
+    mydb = myclient["artist_names"]
+    mycol = mydb["singular_top_update"]
 
-    # Check if the information has already been tweeted lately, if not then tweet new update
-    path = os.getcwd()
+    mongo_search_term = {"type":type, "period":period}
 
-    # find out which file we are checking for the time frame chosen
-    file_name_and_time_frame_tweet_string = get_relevant_time_frame_information(type, period)
+    if mycol.find_one(mongo_search_term) != None:
+        mongo_return = mycol.find_one(mongo_search_term)
 
-    file_name_and_path = path + "\\" + file_name_and_time_frame_tweet_string[0]
+        if mongo_return["value"] != search_str:
+            update_mongo = { "$set": {"value": search_str, "timestamp": datetime.datetime.utcnow()}}
+            # Get the timestamp from the previous update first though
+            timestamp_from_last_update = mongo_return["timestamp"]
+            mycol.update_one(mongo_search_term, update_mongo)
 
-    search_str = twitter_handles.check_or_add_artist_names_to_database(search_str, add_to_database)
+            try:
+                if tweet:
+                    item_url = search_spotify(search_str, type)
+                    how_long_item_was_top = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
 
-    file = open(file_name_and_path, "a+")
-    file.seek(0)
-
-    if file.read() != search_str:
-        file.close()
-        file = open(file_name_and_path, "w+")
-        file.write(search_str)
-        file.close()
-        tweetStr = file_name_and_time_frame_tweet_string[1] + "\n\n" + tweetable_string + "\n" + str(item_url)
-        print(tweetStr, flush=True)
-        try:
-            if tweet:
-                api.update_status(status=tweetStr)
-                # Just to reduce the spam load a little.
-                sleep(5)
-        except:
-            print("Could not tweet latest {} update".format(type), flush=True)
+                    tweetStr =  "{} \n\n {} \n\n This was the most listened to {} for {} \n{}".format(get_relevant_time_frame_information(type, period), type, str(how_long_item_was_top), tweetable_string, str(item_url))
+                    print(tweetStr, flush=True)
+                    api.update_status(status=tweetStr)
+                    # Just to reduce the spam load a little.
+                    sleep(30)
+            except:
+                print("Could not tweet latest {} update".format(type), flush=True)
+        else:
+            print("No update needed for {} {}".format(type, period))
+            
     else:
-        print(NO_UPDATE_NEEDED, flush=True)
-        file.close()
+        mycol.insert({"type":type, "period": period, "value": search_str, "timestamp": datetime.datetime.utcnow()})
+        # Try that again!
+        print("Recursion!")
+        singular_top_update(period, top, type)
+        return
+
 
 def gather_relevant_information(type, time_frame, limit):
     if type == 'artist':
@@ -205,10 +209,8 @@ def search_spotify(search_string, type):
 
 # Pass the top item list
 def replace_top_item_artist_with_handle(top_item):
-    print(top_item)
     top_item_split = str(top_item[0]).split('-', maxsplit=1)
     rest_of_split = str(top_item_split[1])
-    print(rest_of_split)
     artist_extract = str(top_item_split[0]).strip()
     artist_extract = twitter_handles.check_or_add_artist_names_to_database(artist_extract, add_to_database)
     return str(artist_extract) + " -" + str(rest_of_split)
