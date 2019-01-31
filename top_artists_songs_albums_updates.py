@@ -117,12 +117,12 @@ def singular_top_update(period, top, type):
             mycol.update_one(mongo_search_term, update_mongo)
 
             try:
-                if tweet:
-                    item_url = search_spotify(search_str, type)
-                    how_long_item_was_top = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
+                item_url = search_spotify(search_str, type)
+                how_long_item_was_top = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
 
-                    tweetStr =  "{} \n\n {} \n\n This was the most listened to {} for {} \n{}".format(get_relevant_time_frame_information(type, period), type, str(how_long_item_was_top), tweetable_string, str(item_url))
-                    print(tweetStr, flush=True)
+                tweetStr =  "{} \n\n{} \n\nThis was the most listened to {} for {} days \n{}".format(get_relevant_time_frame_information(type, period), tweetable_string, type, str(how_long_item_was_top), str(item_url))
+                print(tweetStr, flush=True)
+                if tweet:
                     api.update_status(status=tweetStr)
                     # Just to reduce the spam load a little.
                     sleep(30)
