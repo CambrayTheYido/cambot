@@ -31,7 +31,7 @@ TWEET = True
 def get_count_of_songs_played(time_range):
     # Decide if we need to tweet about today or over a set of days
     if time_range == 1:
-        tweet_date_range = "today"
+        tweet_date_range = ""
     else:
         tweet_date_range = "over the last {} days".format(time_range)
 
@@ -61,10 +61,11 @@ def get_count_of_songs_played(time_range):
                 genre_list.append(str(genre_to_add))
         except:
             continue
-    # How many songs have been played
-    count = len(list_of_tracks) + 1 # starts at 0, so add 1, because... yes
 
+    count = len(list_of_tracks)
     if count > 0:
+        # How many songs have been played
+        count = len(list_of_tracks) + 1  # starts at 0, so add 1, because... yes
         genre_count = {}
         disregard_tag = ["seen live", "live_seen", "nyc", "Loops3N", "1Live Fiehe", "Nottingham", "Hospital Records Label", "Dnb Stuff", "The Weeknd", "Swag", "jihad", "eye q", "Tolistento"]
         for genre in genre_list:

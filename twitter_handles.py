@@ -66,7 +66,6 @@ def search_spotify(sp_instance, search_string, type):
     return url
 
 def check_or_add_artist_names_to_database(artist_name, add_to_database):
-  dblist = myclient.list_database_names()
   mydb = myclient["artist_names"]
   mycol = mydb["names_and_handles"]
 
@@ -84,7 +83,7 @@ def check_or_add_artist_names_to_database(artist_name, add_to_database):
   
     # Clarity checking to avoid accidental inserts
     if len(handle) == 0:
-      print("You entered nothing (by mistake?) You have a second chance.")
+      print("You entered nothing (by mistake?)")
       handle = input()
 
 
