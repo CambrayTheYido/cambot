@@ -119,7 +119,6 @@ def singular_top_update(period, top, type):
             try:
                 item_url = search_spotify(search_str, type)
                 how_long_item_was_top = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
-
                 tweetStr =  "{} \n\n{} \n\nThis was the most listened to {} for {} days \n{}".format(get_relevant_time_frame_information(type, period), tweetable_string, type, str(how_long_item_was_top), str(item_url))
                 print(tweetStr, flush=True)
                 if tweet:
@@ -130,7 +129,7 @@ def singular_top_update(period, top, type):
                 print("Could not tweet latest {} update".format(type), flush=True)
         else:
             print("No update needed for {} {}".format(type, period))
-            
+
     else:
         mycol.insert({"type":type, "period": period, "value": search_str, "timestamp": datetime.datetime.utcnow()})
         # Try that again!

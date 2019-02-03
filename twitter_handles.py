@@ -50,7 +50,7 @@ def is_artist_in_dict(artist_name):
     return ' '.join([word.capitalize() for word in artist_name.split(' ')])
 
 def search_spotify(sp_instance, search_string, type):
-    result = sp_instance.search(search_string, limit='1', type=type)
+    result = sp_instance.search(search_string + " NOT radio", limit='1', type=type)
     if type == 'artist':
         result = result['artists']['items']
     elif type == 'track':
@@ -63,10 +63,10 @@ def search_spotify(sp_instance, search_string, type):
         url = url.get('spotify')
     if url == '':
         print('No results found in spotify search for {}'.format(search_string), flush=True)
+        return
     return url
 
 def check_or_add_artist_names_to_database(artist_name, add_to_database):
-  dblist = myclient.list_database_names()
   mydb = myclient["artist_names"]
   mycol = mydb["names_and_handles"]
 
@@ -84,7 +84,7 @@ def check_or_add_artist_names_to_database(artist_name, add_to_database):
   
     # Clarity checking to avoid accidental inserts
     if len(handle) == 0:
-      print("You entered nothing (by mistake?) You have a second chance.")
+      print("You entered nothing (by mistake?)")
       handle = input()
 
 
