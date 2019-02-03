@@ -196,7 +196,7 @@ def dynamic_playlist_updater(playlist_id):
             limit = 0
             for key, value in sorted_tracks.items():
                 if limit < 50:
-                    search = t.search_spotify(sp, key + " NOT radio edit", "track")
+                    search = t.search_spotify(sp, key, "track")
                     if search is not None:
                         spotify_searched_tracks.append(search)
                         limit += 1
