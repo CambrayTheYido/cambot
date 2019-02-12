@@ -124,8 +124,6 @@ def check_number(value):
     return ivalue
 
 
-<<<<<<< Updated upstream
-=======
 def dynamic_playlist_updater(playlist_id):
     # Start with getting the top songs for each artist stored in the database
     mydb = myclient["artist"]
@@ -212,7 +210,6 @@ def calculate_song_weight(reference_count):
     return points_per_hit
 
 
->>>>>>> Stashed changes
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--timeframe",
                     help="Creates a playlist of the top songs from the past month, 6 months or years.",
