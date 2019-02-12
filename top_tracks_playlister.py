@@ -124,6 +124,95 @@ def check_number(value):
     return ivalue
 
 
+<<<<<<< Updated upstream
+=======
+def dynamic_playlist_updater(playlist_id):
+    # Start with getting the top songs for each artist stored in the database
+    mydb = myclient["artist"]
+    mycol = mydb["collection"]
+
+    top_tracks = [user.get_top_tracks(period="7day"),
+                  user.get_top_tracks(period="1month"),
+                  user.get_top_tracks(period="3month"),
+                  user.get_top_tracks(period="6month"),
+                  user.get_top_tracks(period="12month"),
+                  user.get_top_tracks(period="overall")]
+
+    # TODO: user.getRecentTracks with time_ranges. Use same time range song weights. e.g. 1 week all 100 for each hit. 1 month (minus that week thats already been counted)
+
+    # Loop over all the artists in the database
+    collection_of_artists = mycol.find()
+    for artist in collection_of_artists:
+        # Find this artist in each top songs list. Shorter time frame listens count as a higher point score than one from
+        # a time period that is longer. E.g. 1 listen from the 7day period = 100 points. 1 listen from 1 month period = 60 and so on
+        artist_name = artist["name"]
+        reference_count = 1
+        list_of_songs_and_their_weight = defaultdict(int)
+        for period_top_tracks_list in top_tracks:
+            for track in period_top_tracks_list:
+                track_and_artist = str(track[0])
+                scrobbles = int(track[1])
+                # Add the song to the dict if not exist, and either way update that songs weighting
+                list_of_songs_and_their_weight[track_and_artist] += (calculate_song_weight(reference_count) * scrobbles)
+                print("Parsed {} songs".format(len(list_of_songs_and_their_weight)), flush=True)
+            reference_count += 1
+        reference_count = 1
+        sorted_tracks = OrderedDict(sorted(list_of_songs_and_their_weight.items(), key=operator.itemgetter(1), reverse=True))
+
+
+        sp = spotipy.Spotify(auth=token)
+
+
+        # Get a list of tracks from sorted list
+        spotify_searched_tracks = []
+        limit_artists = defaultdict(int)
+        limit = 0
+        for key, value in sorted_tracks.items():
+            artist = key.split("-")[0]
+            if limit < 30:
+                search = t.search_spotify(sp, key, "track")
+                if search is not None and limit_artists.get(artist, 1) <= 5:
+                    spotify_searched_tracks.append(search)
+                    limit_artists[artist] += 1
+                    limit += 1
+            else:
+                break
+
+        tracks_to_remove = []
+        tracks_to_add = []
+
+        playlist = sp.user_playlist_tracks(user=spotify_username, playlist_id=playlist_id)
+        # order = 0
+        # for item in playlist['items']:
+        #     link = item["external_urls"].get("url")
+        #     if link not in spotify_searched_tracks:
+        #         # Remove from playlist at end
+        #         tracks_to_remove.append(link)
+        sp.user_playlist_replace_tracks(spotify_username,playlist_id,spotify_searched_tracks)
+
+
+        #sp.user_playlist_remove_all_occurrences_of_tracks(user=spotify_username, playlist_id=playlist_id, tracks=tracks_to_remove)
+
+
+
+def calculate_song_weight(reference_count):
+    point_calc = 100
+    if reference_count == 1:
+        points_per_hit = point_calc
+    elif reference_count == 2:
+        points_per_hit = int(point_calc * 0.9)
+    elif reference_count == 3:
+        points_per_hit = int(point_calc * 0.75)
+    elif reference_count == 4:
+        points_per_hit = int(point_calc * 0.4)
+    elif reference_count == 5:
+        points_per_hit = int(point_calc * 0.2)
+    elif reference_count == 6:
+        points_per_hit = int(point_calc * 0.1)
+    return points_per_hit
+
+
+>>>>>>> Stashed changes
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--timeframe",
                     help="Creates a playlist of the top songs from the past month, 6 months or years.",

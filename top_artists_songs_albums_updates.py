@@ -114,13 +114,14 @@ def singular_top_update(period, top, type):
             update_mongo = { "$set": {"value": search_str, "timestamp": datetime.datetime.utcnow()}}
             # Get the timestamp from the previous update first though
             timestamp_from_last_update = mongo_return["timestamp"]
+            last_update = mongo_return["value"]
             mycol.update_one(mongo_search_term, update_mongo)
 
             try:
                 item_url = search_spotify(search_str, type)
                 how_long_item_was_top = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
 
-                tweetStr =  "{} \n\n{} \n\nThis was the most listened to {} for {} days \n{}".format(get_relevant_time_frame_information(type, period), tweetable_string, type, str(how_long_item_was_top), str(item_url))
+                tweetStr =  "{} \n\n{} \n\nThis replaces '{}' which stood top for {} days\n\n{}".format(get_relevant_time_frame_information(type, period), tweetable_string, last_update, how_long_item_was_top, str(item_url))
                 print(tweetStr, flush=True)
                 if tweet:
                     api.update_status(status=tweetStr)
