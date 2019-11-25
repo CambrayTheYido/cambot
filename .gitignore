@@ -1,7 +1,6 @@
 /*.txt
-/config.py
+/cambot/config.py
 /__pycache__
-/.cache-cambraytheyido
+/cambot/.cache-cambraytheyido
 /*.cambot
 /.idea
-/topAlbumURL.txt
