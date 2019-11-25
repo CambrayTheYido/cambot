@@ -97,8 +97,10 @@ def get_relevant_time_frame_information(type, time_frame):
 def singular_top_update(period, top, type):
     x = top[0]
     search_str = str(x[0])
-    if type == "album" or type == "track":
+    if type == "track":
         tweetable_string = replace_top_item_artist_with_handle(x)
+    if type == "album":
+        tweetable_string = str(search_str.split("-")[1]).strip()
     else:
         tweetable_string = twitter_handles.check_or_add_artist_names_to_database(search_str, add_to_database)
 
@@ -114,12 +116,13 @@ def singular_top_update(period, top, type):
             update_mongo = { "$set": {"value": search_str, "timestamp": datetime.datetime.utcnow()}}
             # Get the timestamp from the previous update first though
             timestamp_from_last_update = mongo_return["timestamp"]
+            last_update_string = mongo_return["value"]
             mycol.update_one(mongo_search_term, update_mongo)
 
             try:
                 item_url = search_spotify(search_str, type)
                 how_long_item_was_top = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
-                tweetStr =  "{} \n\n{} \n\nThis was the most listened to {} for {} days \n{}".format(get_relevant_time_frame_information(type, period), tweetable_string, type, str(how_long_item_was_top), str(item_url))
+                tweetStr =  "{} \n\n{} \n\nThis replaces the previous top {} '{}' which stood for {} days \n{}".format(get_relevant_time_frame_information(type, period), tweetable_string, type, last_update_string, str(how_long_item_was_top), str(item_url))
                 print(tweetStr, flush=True)
                 if tweet:
                     api.update_status(status=tweetStr)
