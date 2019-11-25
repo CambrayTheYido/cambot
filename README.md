@@ -2,32 +2,9 @@
 
 https://twitter.com/BotCambray
 
-Twitter bot that uses APIs such as Spotipy; a python wrapper for the Spotify web API and pylast; a python wrapper for the last.fm web API.
+A twitter bot that collates information from a last.fm user profile to tweet about a users music listening trends. This bot can also create varying Spotify playlists based on this information.
 
-### dailySpotifyCount.py 
+### dynamic_playlister.py
 
-This script runs at 23.59 daily and collects all the songs I have potentially listened to and gets the length of that list. This length is set to a count variable which is then tweeted as how many songs I have listened to on spotify that day.
-
-### nowPlaying.py 
-
-This runs constantly, checking every 15 seconds if what I am currently listening to has changed, and then tweets about it.
-
-### topAlbumsOfTheWeek.py
-
-This runs once a week on a sunday and collects my top albums I have been listening to on Spotify. This then collects as many albums as it can before hitting the 140 character limit.
-
-### top_information_update.py
-
-This is run every 30 mins and checks if my most listened to artist, track, or artist of the last 7 days has changed from what it last tweeted.
-
-### topTracksLongTerm.py
-
-This gets my top tracks from over the last few years using the Spotify API and then tweets them in order of most played.
-
-### topTracksMediumTerm.py
-
-This gets my top tracks from over the last 6 months using the Spotify API and then tweets them in order of most played.
-
-### topTracksShortTerm.py
-
-This gets my top tracks from over the last month using the Spotify API and then tweets them in order of most played.
+This takes a cmd line parameter of a spotify playlist URI. It loads a users last.fm profile listening data for all date ranges possible, which are the users most listened to tracks of the last 7 days, 1 month, 3 months, 6 months, 12 months, and overall. All this data gets put into a list that is looped over and each bit of information parsed. The loop extracts the songs artist and track title and puts it into a defaultdict, along with the amount of times the user has listened to that song. The amount of times the user has listened to that song is passed into a method that increases the value based on time range of the plays. For example, if the play was in the last 7 days, it gets a boosted score in comparison to a play over the last three months. It does this so that the playlist is mainly consisting of recent listening trends, with a mix of long term trends. We don't just want a playlist of top songs over the last month, we want to give each song a score, based on a simple algorithm.
+Once that has been calculated, it passes the songs onto a file that searches spotify for it. That spotify URL is passed into a list and once the list hits a length of 50 is added to the playlist originally passed into the program via the cmd line.
