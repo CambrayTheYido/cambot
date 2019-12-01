@@ -15,15 +15,15 @@ Playlist here: https://open.spotify.com/playlist/09mHNJgzOgdUZksMrohoPH?si=M92bC
 Can tweet single tweets or create threads of lists of songs/artists/albums over the last x amount of time.
 
 Single tweet:
-[Singular Tweet](https://raw.githubusercontent.com/ryancambray/cambot/master/examples/cambotexample.JPG)
+![Singular Tweet](https://raw.githubusercontent.com/ryancambray/cambot/master/examples/cambotexample.JPG)
 Thread:
-[Thread of Tweets](https://github.com/ryancambray/cambot/blob/master/examples/thread.JPG?raw=true)
+![Thread of Tweets](https://github.com/ryancambray/cambot/blob/master/examples/thread.JPG?raw=true)
 
 ### top_tracks_playlister.py
 Uses built in Spotify API calls to create playlists of most listened to songs over the last month, few months, and years.
 
 Example over the last month:
-[Top tracks of september](https://github.com/ryancambray/cambot/blob/master/examples/Capture.JPG?raw=true)
+![Top tracks of september](https://github.com/ryancambray/cambot/blob/master/examples/Capture.JPG?raw=true)
 
 Last few years:
-[Last few years](https://github.com/ryancambray/cambot/blob/master/examples/years.JPG?raw=true)
+![Last few years](https://github.com/ryancambray/cambot/blob/master/examples/years.JPG?raw=true)
