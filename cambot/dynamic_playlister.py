@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import sys
-sys.path.append("/cambot/")
+
 import spotipy
 import spotipy.util as util
-import config
-from cambot import twitter_handles as t
+import config 
+import twitter_handles as t
 import pylast
 import pymongo
 import argparse
@@ -36,14 +36,7 @@ last_fm_username = config.lastfm_username
 network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username)
 user = network.get_user(last_fm_username)
 
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-
-mydb = myclient["mydatabase"]
-
 def dynamic_playlist_updater(playlist_id):
-    # Start with getting the top songs for each artist stored in the database
-    mydb = myclient["artist"]
-    mycol = mydb["collection"]
 
     top_tracks = [user.get_top_tracks(period="7day"),
                   user.get_top_tracks(period="1month"),
