@@ -4,3 +4,4 @@
 /cambot/.cache-cambraytheyido
 /*.cambot
 /.idea
+/cambot/__pycache__
