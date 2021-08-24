@@ -4,6 +4,7 @@ from twython import Twython
 import argparse
 import config
 import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 import spotipy.util as util
 import twitter_handles
 import datetime
@@ -11,6 +12,7 @@ from dateutil.relativedelta import *
 from time import sleep
 import os
 import pymongo
+from math import ceil
 
 # PyMongo
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
@@ -29,9 +31,7 @@ client_id = config.spotify_client_id
 client_secret = config.spotfiy_client_secret
 
 # Spotify Token
-token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
-                                   redirect_uri="http://localhost:8090", scope=scope)
-sp = spotipy.Spotify(auth=token)
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=config.spotify_scope, client_secret=config.spotfiy_client_secret, client_id=config.spotify_client_id, redirect_uri="http://localhost:8888/callback"))
 
 # LastFM API
 last_fm_api_key = config.lastfm_api_key
@@ -81,18 +81,18 @@ def get_latest_tweet():
 
 def get_relevant_time_frame_information(type, time_frame):
     if time_frame == "7day":
-        time_frame_tweet_string = "New #Top{}Update of the week".format(type.title(), time_frame)
+        return "New #Top{}Update of the week".format(type.title(), time_frame)
     elif time_frame == "1month":
-        time_frame_tweet_string = "New #Top{}Update of the month".format(type.title(), time_frame)
+        return "New #Top{}Update of the month".format(type.title(), time_frame)
     elif time_frame == "3month":
-        time_frame_tweet_string = "New #Top{}Update of the last 3 months".format(type.title(), time_frame)
+        return "New #Top{}Update of the last 3 months".format(type.title(), time_frame)
     elif time_frame == "6month":
-        time_frame_tweet_string = "New #Top{}Update of the last 6 months".format(type.title(), time_frame)
+        return "New #Top{}Update of the last 6 months".format(type.title(), time_frame)
     elif time_frame == "12month":
-        time_frame_tweet_string = "New #Top{}Update of the last year".format(type.title(), time_frame)
+        return "New #Top{}Update of the last year".format(type.title(), time_frame)
     elif time_frame == "overall":
-        time_frame_tweet_string = "New #Top{}Update of all time ({})".format(type.title(), age_of_account_in_years_months)
-    return time_frame_tweet_string
+        return "New #Top{}Update of all time ({})".format(type.title(), age_of_account_in_years_months)
+    return
 
 def singular_top_update(period, top, type):
     x = top[0]
@@ -117,24 +117,25 @@ def singular_top_update(period, top, type):
             # Get the timestamp from the previous update first though
             timestamp_from_last_update = mongo_return["timestamp"]
             last_update_string = mongo_return["value"]
-            mycol.update_one(mongo_search_term, update_mongo)
 
             try:
                 item_url = search_spotify(search_str, type)
-                how_long_item_was_top = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
-                tweetStr =  "{} \n\n{} \n\nThis replaces the previous top {} '{}' which stood for {} days \n{}".format(get_relevant_time_frame_information(type, period), tweetable_string, type, last_update_string, str(how_long_item_was_top), str(item_url))
+                how_long_item_was_top_days = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
+                how_long_item_was_top_hours = ceil((datetime.datetime.utcnow() - timestamp_from_last_update).seconds / 3600 % 24)
+                tweetStr = "{} \n\n{} \n\nThis replaces the previous top {} '{}' which stood for {} days {} hours \n{}".format(get_relevant_time_frame_information(type, period), tweetable_string, type, last_update_string, str(how_long_item_was_top_days), str(how_long_item_was_top_hours), str(item_url))
                 print(tweetStr, flush=True)
                 if tweet:
                     api.update_status(status=tweetStr)
+                    mycol.update_one(mongo_search_term, update_mongo)
                     # Just to reduce the spam load a little.
-                    sleep(30)
+                    sleep(5)
             except:
                 print("Could not tweet latest {} update".format(type), flush=True)
         else:
             print("No update needed for {} {}".format(type, period))
 
     else:
-        mycol.insert({"type":type, "period": period, "value": search_str, "timestamp": datetime.datetime.utcnow()})
+        mycol.insert_one({"type":type, "period": period, "value": search_str, "timestamp": datetime.datetime.utcnow()})
         # Try that again!
         print("Recursion!")
         singular_top_update(period, top, type)
@@ -264,7 +265,7 @@ parser.add_argument("--artists",
                     help="Tweets the top artists from the specified time frame and, if the limit is larger than one, chains the tweets in a thread. Else it just tweets a singular update if the item has changed since you last ran the script",
                     choices=choices)
 parser.add_argument("-a", "--at",
-                    help="Include this at runtime to replace mentions of artists names with their twitter handles. If add is selected, you will be prompted to enter twitter handles of the corresponding artist if it was not found in the database.", default="leave", choices=['add', 'leave'])
+                    help="Include this at runtime to replace mentions of artists names with their twitter handles. If add is selected, you will be prompted to enter twitter handles of the corresponding artist if it was not found in the database.", choices=['add', 'leave'])
 parser.add_argument("-t", "--tweet",
                     help="Used to turn tweeting off, usually used for testing purposes",
                     action="store_true")
