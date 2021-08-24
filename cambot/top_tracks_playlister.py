@@ -3,8 +3,10 @@ import datetime
 
 import spotipy
 from twython import Twython
-import spotipy.util as util
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 import config
+from spotipy.oauth2 import SpotifyOAuth
 import twitter_handles as t
 import argparse
 import pylast
@@ -28,8 +30,14 @@ twitter_access_token = config.twitter_access_token
 twitter_access_token_secret = config.twitter_access_token_secret
 
 # Spotify Token
-token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
-                                   redirect_uri="http://localhost:8090", scope=scope)
+# token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
+#                                    redirect_uri="http://localhost:8090", scope=scope)
+# Spotify Token
+CACHE = ".cache-" + "test"
+spotify_client_id="8e62289bbb4e4d029993378b17ede367"
+spotfiy_client_secret="9e398cc0a837401fb19550eb3918281f"
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, cache_path=CACHE, client_secret=spotfiy_client_secret, client_id=spotify_client_id, redirect_uri="http://localhost:8080"))
+
 
 # Twitter object
 api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter_access_token_secret)
@@ -107,32 +115,28 @@ def create_playlist(time_range, limit):
         playlist_name = "Top tracks over the last few years as of {} {}".format(get_current_month(),
                                                                                 get_correct_year())
 
-    if token:
-        sp = spotipy.Spotify(auth=token)
 
-        # Create a new playlist
-        playlist = sp.user_playlist_create(user=spotify_username, name=playlist_name, public=True)
-        playlist_id = playlist.get('uri')
+    # Create a new playlist
+    playlist = sp.user_playlist_create(user=spotify_username, name=playlist_name, public=True)
+    playlist_id = playlist.get('uri')
 
-        # Get top tracks from the chosen time range and the limit
-        top_tracks = sp.current_user_top_tracks(time_range=time_range, limit=limit)
+    # Get top tracks from the chosen time range and the limit
+    top_tracks = sp.current_user_top_tracks(time_range=time_range, limit=limit)
 
-        list_of_tracks_to_add = []
-        some_artists = []
+    list_of_tracks_to_add = []
+    some_artists = []
 
-        # Iterate through the tracks to get the relevant information
-        for track in top_tracks['items']:
+    # Iterate through the tracks to get the relevant information
+    for track in top_tracks['items']:
 
-            # Store a list of artists to involve in the tweet
-            artist = t.check_or_add_artist_names_to_database(track['artists'][0].get('name'), add_to_database)
-            if artist not in some_artists:
-                some_artists.append(artist)
+        # Store a list of artists to involve in the tweet
+        artist = track['artists'][0].get('name')
+        if artist not in some_artists:
+            some_artists.append(artist)
 
-            list_of_tracks_to_add.append(track['uri'])
+        list_of_tracks_to_add.append(track['uri'])
 
-        sp.user_playlist_add_tracks(user=spotify_username, playlist_id=playlist_id, tracks=list_of_tracks_to_add)
-    else:
-        print("Can't get token for", spotify_username)
+    sp.user_playlist_add_tracks(user=spotify_username, playlist_id=playlist_id, tracks=list_of_tracks_to_add)
 
     playlist_link_url = playlist['external_urls']
     playlist_link_url = playlist_link_url.get('spotify')
