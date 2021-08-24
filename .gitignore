@@ -5,3 +5,4 @@
 /*.cambot
 /.idea
 /cambot/__pycache__
+Pipfile.lock
