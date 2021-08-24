@@ -25,13 +25,8 @@ twitter_api_secret = config.twitter_api_secret
 twitter_access_token = config.twitter_access_token
 twitter_access_token_secret = config.twitter_access_token_secret
 
-scope = config.spotify_scope
-spotify_username = config.spotify_username
-client_id = config.spotify_client_id
-client_secret = config.spotfiy_client_secret
-
 # Spotify Token
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=config.spotify_scope, client_secret=config.spotfiy_client_secret, client_id=config.spotify_client_id, redirect_uri="http://localhost:8888/callback"))
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=config.spotify_scope, client_secret=config.spotify_client_secret, client_id=config.spotify_client_id, redirect_uri="http://localhost:8888/callback"))
 
 # LastFM API
 last_fm_api_key = config.lastfm_api_key

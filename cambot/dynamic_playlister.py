@@ -13,10 +13,10 @@ from collections import defaultdict, OrderedDict
 import operator
 
 # Spotify API
-scope = "playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private streaming ugc-image-upload user-follow-modify user-follow-read user-library-read user-library-modify user-read-private user-read-birthdate user-read-email user-top-read user-read-playback-state user-modify-playback-state user-read-currently-playing user-read-recently-played"
 spotify_username = config.spotify_username
 client_id = config.spotify_client_id
-client_secret = config.spotfiy_client_secret
+client_secret = config.spotify_client_secret
+scope = config.spotify_scope
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -26,10 +26,7 @@ twitter_access_token_secret = config.twitter_access_token_secret
 
 # Spotify Token
 CACHE = ".cache-" + "test"
-spotify_client_id="8e62289bbb4e4d029993378b17ede367"
-spotfiy_client_secret="9e398cc0a837401fb19550eb3918281f"
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, cache_path=CACHE, client_secret=spotfiy_client_secret, client_id=spotify_client_id, redirect_uri="http://localhost:8888/callback"))
-
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, cache_path=CACHE, client_secret=client_secret, client_id=client_id, redirect_uri="http://localhost:8888/callback"))
 
 # LastFM API
 last_fm_api_key = config.lastfm_api_key
