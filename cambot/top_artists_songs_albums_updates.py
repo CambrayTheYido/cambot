@@ -59,7 +59,7 @@ time_frames = {'7day': 'week',
                # leave overall blank and work out length using age of account
                'overall': age_of_account_in_years_months}
 
-PLAYS = " plays\n"
+PLAYS = " plays"
 
 tweet = True
 add_to_database = False
@@ -138,56 +138,40 @@ def singular_top_update(period, top, type):
 
 
 def gather_relevant_information(type, time_frame, limit):
+    top = None
+
     if type == 'artist':
         # determine period to use
         top = user.get_top_artists(period=time_frame, limit=limit)
-
-        if limit > 1:
-            first_tweet = "My top {} most listened to #Artists of the last {}".format(limit,
-                [value for key, value in time_frames.items() if time_frame in key.lower()][0])
-            print(first_tweet, flush=True)
-
-            # Tweet the first tweet to get the ball rolling, grab the ID of the tweet while we're at it
-            if tweet:
-                api.update_status(status=first_tweet)
-            latest_tweet = get_latest_tweet()
-
-            # Now we can chain the following tweets onto the first tweet
-            chain_updates(top, latest_tweet, type)
-        else:
-            singular_top_update(time_frame, top, type)
-
     elif type == 'track':
         top = user.get_top_tracks(period=time_frame, limit=limit)
-
-        if limit > 1:
-            first_tweet = "My top {} most listened to #Tracks of the last {}".format(limit,
-                [value for key, value in time_frames.items() if time_frame in key.lower()][0])
-            print(first_tweet, flush=True)
-
-            if tweet:
-                api.update_status(status=first_tweet)
-            latest_tweet = get_latest_tweet()
-
-            chain_updates(top, latest_tweet, type)
-        else:
-            singular_top_update(time_frame, top, type)
-
     elif type == 'album':
         top = user.get_top_albums(period=time_frame, limit=limit)
 
-        if limit > 1:
-            first_tweet = "My top {} most listened to #Albums of the last {}".format(limit,
-                [value for key, value in time_frames.items() if time_frame in key.lower()][0])
-            print(first_tweet, flush=True)
+    if top is None:
+        raise Exception("Unable to get information from last fm. Type used:{}. Time_frame used: {}.")
 
-            if tweet:
-                api.update_status(status=first_tweet)
-            latest_tweet = get_latest_tweet()
+    if limit > 1:
+        readable_time_frame = [value for key, value in time_frames.items() if time_frame in key.lower()][0]
 
-            chain_updates(top, latest_tweet, type)
-        else:
-            singular_top_update(time_frame, top, type)
+        # Go below each tweet, looks better than just plain text
+        cambot_hashtag = "#CambotsTop{}sOfThe{}".format(type.capitalize(), readable_time_frame.capitalize())
+
+        first_tweet = "My top {} most played #{}s of the last {}\n{}".format(limit,
+                                                                             type.capitalize(),
+                                                                             readable_time_frame,
+                                                                             cambot_hashtag)
+        print(first_tweet, flush=True)
+
+        # Tweet the first tweet to get the ball rolling, grab the ID of the tweet while we're at it
+        if tweet:
+            api.update_status(status=first_tweet)
+        latest_tweet = get_latest_tweet()
+
+        # Now we can chain the following tweets onto the first tweet
+        chain_updates(top, latest_tweet, type, cambot_hashtag)
+    else:
+        singular_top_update(time_frame, top, type)
 
 def search_spotify(search_string, type):
     result = sp.search(search_string, limit='1', type=type)
@@ -213,7 +197,8 @@ def replace_top_item_artist_with_handle(top_item):
     artist_extract = twitter_handles.check_or_add_artist_names_to_database(artist_extract, add_to_database)
     return str(artist_extract) + " -" + str(rest_of_split)
 
-def chain_updates(list_of_top_items, latest_tweet, type):
+
+def chain_updates(list_of_top_items, latest_tweet, type, cambot_hashtag):
     tweet_count = 1
     for top_item in list_of_top_items:
         track_artist_album_search = str(top_item[0])
@@ -224,13 +209,14 @@ def chain_updates(list_of_top_items, latest_tweet, type):
         else:
             track_artist_album = str(top_item[0])
             if include_twitter_handles and type == 'artist':
-                track_artist_album = twitter_handles.check_or_add_artist_names_to_database(track_artist_album, add_to_database)
+                track_artist_album = twitter_handles.check_or_add_artist_names_to_database(track_artist_album,
+                                                                                           add_to_database)
         playcount = str(top_item[1])
 
-        add_to_tweet = "{}. {} - {}{} \n{}".format(tweet_count, track_artist_album, playcount, PLAYS,
-                                                   search_spotify(track_artist_album_search, type))
+        add_to_tweet = "{}. {} [{}{}]\n\n{}\n\n{}".format(tweet_count, track_artist_album, playcount, PLAYS,
+                                                           search_spotify(track_artist_album_search, type),
+                                                           cambot_hashtag)
         if tweet and add_to_tweet != 'True':
-
             api.update_status(status=add_to_tweet, in_reply_to_status_id=latest_tweet)
             latest_tweet = get_latest_tweet()
             sleep(30)
