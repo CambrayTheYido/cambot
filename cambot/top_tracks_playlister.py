@@ -21,7 +21,7 @@ mydb = myclient["mydatabase"]
 scope = config.spotify_scope
 spotify_username = config.spotify_username
 client_id = config.spotify_client_id
-client_secret = config.spotfiy_client_secret
+client_secret = config.spotify_client_secret
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -30,13 +30,7 @@ twitter_access_token = config.twitter_access_token
 twitter_access_token_secret = config.twitter_access_token_secret
 
 # Spotify Token
-# token = util.prompt_for_user_token(username=spotify_username, client_id=client_id, client_secret=client_secret,
-#                                    redirect_uri="http://localhost:8090", scope=scope)
-# Spotify Token
-CACHE = ".cache-" + "test"
-spotify_client_id="8e62289bbb4e4d029993378b17ede367"
-spotfiy_client_secret="9e398cc0a837401fb19550eb3918281f"
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, cache_path=CACHE, client_secret=spotfiy_client_secret, client_id=spotify_client_id, redirect_uri="http://localhost:8080"))
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_secret=client_secret, client_id=client_id, redirect_uri="http://localhost:8888/callback"))
 
 
 # Twitter object
