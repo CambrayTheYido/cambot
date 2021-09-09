@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import datetime
 import sys
 
 import spotipy
@@ -26,7 +27,9 @@ twitter_access_token_secret = config.twitter_access_token_secret
 
 # Spotify Token
 CACHE = ".cache-" + "test"
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, cache_path=CACHE, client_secret=client_secret, client_id=client_id, redirect_uri="http://localhost:8888/callback"))
+sp = spotipy.Spotify(
+    auth_manager=SpotifyOAuth(scope=scope, cache_path=CACHE, client_secret=client_secret, client_id=client_id,
+                              redirect_uri="http://localhost:8888/callback"))
 
 # LastFM API
 last_fm_api_key = config.lastfm_api_key
@@ -37,8 +40,8 @@ last_fm_username = config.lastfm_username
 network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username)
 user = network.get_user(last_fm_username)
 
-def dynamic_playlist_updater(playlist_id):
 
+def dynamic_playlist_updater(playlist_id):
     top_tracks = [user.get_top_tracks(period="7day", limit=500),
                   user.get_top_tracks(period="1month", limit=500),
                   user.get_top_tracks(period="3month", limit=500),
@@ -47,7 +50,6 @@ def dynamic_playlist_updater(playlist_id):
                   user.get_top_tracks(period="overall", limit=500)]
 
     # TODO: user.getRecentTracks with time_ranges. Use same time range song weights. e.g. 1 week all 100 for each hit. 1 month (minus that week thats already been counted)
-
 
     reference_count = 1
     list_of_songs_and_their_weight = defaultdict(int)
@@ -58,7 +60,8 @@ def dynamic_playlist_updater(playlist_id):
             # Add the song to the dict if not exist, and either way update that songs weighting
             list_of_songs_and_their_weight[track_and_artist] += (calculate_song_weight(reference_count) * scrobbles)
         reference_count += 1
-    sorted_tracks = OrderedDict(sorted(list_of_songs_and_their_weight.items(), key=operator.itemgetter(1), reverse=True))
+    sorted_tracks = OrderedDict(
+        sorted(list_of_songs_and_their_weight.items(), key=operator.itemgetter(1), reverse=True))
 
     # Get a list of tracks from sorted list
     spotify_searched_tracks = []
@@ -75,25 +78,29 @@ def dynamic_playlist_updater(playlist_id):
     tracks_to_remove = []
     tracks_to_add = []
 
-    playlist = sp.playlist_tracks(playlist_id=playlist_id)
+    playlist = sp.playlist_items(playlist_id=playlist_id)
     # order = 0
     # for item in playlist['items']:
     #     link = item["external_urls"].get("url")
     #     if link not in spotify_searched_tracks:
     #         # Remove from playlist at end
     #         tracks_to_remove.append(link)
-    sp.user_playlist_replace_tracks(spotify_username,playlist_id,spotify_searched_tracks)
+    sp.playlist_replace_items(playlist_id, spotify_searched_tracks)
+    # Update the playlist description to show when the playlist was last updated
+    sp.playlist_change_details(playlist_id,
+                               description=" Last updated - {} - A playlist featuring a bunch of tracks I like right "
+                                           "now and ones I have loved over the years."
+                                           " Tracked using last.fm API with playcounts. "
+                                           "Kept up to date by my bot Cambot.".format(datetime.date.today()))
 
-
-    #sp.user_playlist_remove_all_occurrences_of_tracks(user=spotify_username, playlist_id=playlist_id, tracks=tracks_to_remove)
-
+    # sp.user_playlist_remove_all_occurrences_of_tracks(user=spotify_username, playlist_id=playlist_id, tracks=tracks_to_remove)
 
 
 def calculate_song_weight(reference_count):
     if reference_count == 1:
-        return 200
+        return 250
     elif reference_count == 2:
-        return 90
+        return 110
     elif reference_count == 3:
         return 50
     elif reference_count == 4:
@@ -102,6 +109,7 @@ def calculate_song_weight(reference_count):
         return 20
     elif reference_count == 6:
         return 12
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--id", help="Playlist ID to update")

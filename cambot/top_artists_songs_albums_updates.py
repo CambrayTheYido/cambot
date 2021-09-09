@@ -26,7 +26,9 @@ twitter_access_token = config.twitter_access_token
 twitter_access_token_secret = config.twitter_access_token_secret
 
 # Spotify Token
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=config.spotify_scope, client_secret=config.spotify_client_secret, client_id=config.spotify_client_id, redirect_uri="http://localhost:8888/callback"))
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=config.spotify_scope, client_secret=config.spotify_client_secret,
+                                               client_id=config.spotify_client_id,
+                                               redirect_uri="http://localhost:8888/callback"))
 
 # LastFM API
 last_fm_api_key = config.lastfm_api_key
@@ -74,6 +76,7 @@ def get_latest_tweet():
         the_latest_tweet = the_latest_tweet[0].get('id')
     return the_latest_tweet
 
+
 def get_relevant_time_frame_information(type, time_frame):
     if time_frame == "7day":
         return "New #Top{}Update of the week".format(type.title(), time_frame)
@@ -89,6 +92,7 @@ def get_relevant_time_frame_information(type, time_frame):
         return "New #Top{}Update of all time ({})".format(type.title(), age_of_account_in_years_months)
     return
 
+
 def singular_top_update(period, top, type):
     x = top[0]
     search_str = str(x[0])
@@ -102,13 +106,13 @@ def singular_top_update(period, top, type):
     mydb = myclient["artist_names"]
     mycol = mydb["singular_top_update"]
 
-    mongo_search_term = {"type":type, "period":period}
+    mongo_search_term = {"type": type, "period": period}
 
     if mycol.find_one(mongo_search_term) != None:
         mongo_return = mycol.find_one(mongo_search_term)
 
         if mongo_return["value"] != search_str:
-            update_mongo = { "$set": {"value": search_str, "timestamp": datetime.datetime.utcnow()}}
+            update_mongo = {"$set": {"value": search_str, "timestamp": datetime.datetime.utcnow()}}
             # Get the timestamp from the previous update first though
             timestamp_from_last_update = mongo_return["timestamp"]
             last_update_string = mongo_return["value"]
@@ -116,8 +120,11 @@ def singular_top_update(period, top, type):
             try:
                 item_url = search_spotify(search_str, type)
                 how_long_item_was_top_days = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
-                how_long_item_was_top_hours = ceil((datetime.datetime.utcnow() - timestamp_from_last_update).seconds / 3600 % 24)
-                tweetStr = "{} \n\n{} \n\nThis replaces the previous top {} '{}' which stood for {} days {} hours \n{}".format(get_relevant_time_frame_information(type, period), tweetable_string, type, last_update_string, str(how_long_item_was_top_days), str(how_long_item_was_top_hours), str(item_url))
+                how_long_item_was_top_hours = ceil(
+                    (datetime.datetime.utcnow() - timestamp_from_last_update).seconds / 3600 % 24)
+                tweetStr = "{} \n\n{} \n\nThis replaces the previous top {} '{}' which stood for {} days {} hours \n{}".format(
+                    get_relevant_time_frame_information(type, period), tweetable_string, type, last_update_string,
+                    str(how_long_item_was_top_days), str(how_long_item_was_top_hours), str(item_url))
                 print(tweetStr, flush=True)
                 if tweet:
                     api.update_status(status=tweetStr)
@@ -130,7 +137,7 @@ def singular_top_update(period, top, type):
             print("No update needed for {} {}".format(type, period))
 
     else:
-        mycol.insert_one({"type":type, "period": period, "value": search_str, "timestamp": datetime.datetime.utcnow()})
+        mycol.insert_one({"type": type, "period": period, "value": search_str, "timestamp": datetime.datetime.utcnow()})
         # Try that again!
         print("Recursion!")
         singular_top_update(period, top, type)
@@ -155,7 +162,8 @@ def gather_relevant_information(type, time_frame, limit):
         readable_time_frame = [value for key, value in time_frames.items() if time_frame in key.lower()][0]
 
         # Go below each tweet, looks better than just plain text
-        cambot_hashtag = "#CambotsTop{}sOfThe{}".format(type.capitalize(), readable_time_frame.capitalize())
+        cambot_hashtag = "#CambotsTop{}sOfTheLast{}".format(type.capitalize(),
+                                                            readable_time_frame.capitalize().replace(" ", ""))
 
         first_tweet = "My top {} most played #{}s of the last {}\n{}".format(limit,
                                                                              type.capitalize(),
@@ -173,6 +181,7 @@ def gather_relevant_information(type, time_frame, limit):
     else:
         singular_top_update(time_frame, top, type)
 
+
 def search_spotify(search_string, type):
     result = sp.search(search_string, limit='1', type=type)
     if type == 'artist':
@@ -188,6 +197,7 @@ def search_spotify(search_string, type):
     if url == '':
         print('No results found in spotify search for {}'.format(search_string), flush=True)
     return url
+
 
 # Pass the top item list
 def replace_top_item_artist_with_handle(top_item):
@@ -214,8 +224,8 @@ def chain_updates(list_of_top_items, latest_tweet, type, cambot_hashtag):
         playcount = str(top_item[1])
 
         add_to_tweet = "{}. {} [{}{}]\n\n{}\n\n{}".format(tweet_count, track_artist_album, playcount, PLAYS,
-                                                           search_spotify(track_artist_album_search, type),
-                                                           cambot_hashtag)
+                                                          search_spotify(track_artist_album_search, type),
+                                                          cambot_hashtag)
         if tweet and add_to_tweet != 'True':
             api.update_status(status=add_to_tweet, in_reply_to_status_id=latest_tweet)
             latest_tweet = get_latest_tweet()
@@ -226,6 +236,7 @@ def chain_updates(list_of_top_items, latest_tweet, type, cambot_hashtag):
         tweet_count += 1
         if tweet_count > limit:
             break
+
 
 def check_number(value):
     ivalue = int(value)
@@ -238,7 +249,8 @@ choices = ["7day", "1month", "3month", "6month", "12month", "overall", "all"]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--tracks",
-                    help="Tweets the top tracks from the specified time frame and, if the limit is larger than one, chains the tweets in a thread. Else it just tweets a singular update if the item has changed since you last ran the script", choices=choices)
+                    help="Tweets the top tracks from the specified time frame and, if the limit is larger than one, chains the tweets in a thread. Else it just tweets a singular update if the item has changed since you last ran the script",
+                    choices=choices)
 parser.add_argument("--albums",
                     help="Tweets the top albums from the specified time frame and, if the limit is larger than one, chains the tweets in a thread. Else it just tweets a singular update if the item has changed since you last ran the script",
                     choices=choices)
@@ -246,11 +258,14 @@ parser.add_argument("--artists",
                     help="Tweets the top artists from the specified time frame and, if the limit is larger than one, chains the tweets in a thread. Else it just tweets a singular update if the item has changed since you last ran the script",
                     choices=choices)
 parser.add_argument("-a", "--at",
-                    help="Include this at runtime to replace mentions of artists names with their twitter handles. If add is selected, you will be prompted to enter twitter handles of the corresponding artist if it was not found in the database.", choices=['add', 'leave'])
+                    help="Include this at runtime to replace mentions of artists names with their twitter handles. If add is selected, you will be prompted to enter twitter handles of the corresponding artist if it was not found in the database.",
+                    choices=['add', 'leave'])
 parser.add_argument("-t", "--tweet",
                     help="Used to turn tweeting off, usually used for testing purposes",
                     action="store_true")
-parser.add_argument("--limit", help="Specify how many items you want to tweet. If the limit is one then it checks your last update and if it has changed then it will tweet", default=10, type=check_number)
+parser.add_argument("--limit",
+                    help="Specify how many items you want to tweet. If the limit is one then it checks your last update and if it has changed then it will tweet",
+                    default=10, type=check_number)
 
 args = parser.parse_args()
 
