@@ -12,6 +12,7 @@ import pymongo
 import argparse
 from collections import defaultdict, OrderedDict
 import operator
+import json
 
 # Spotify API
 spotify_username = config.spotify_username
@@ -63,6 +64,9 @@ def dynamic_playlist_updater(playlist_id):
     sorted_tracks = OrderedDict(
         sorted(list_of_songs_and_their_weight.items(), key=operator.itemgetter(1), reverse=True))
 
+    # Print out to the console the weighting each song has, for research purposes
+    print(json.dumps(sorted_tracks, indent=4), flush=True)
+
     # Get a list of tracks from sorted list
     spotify_searched_tracks = []
     limit = 0
@@ -75,23 +79,11 @@ def dynamic_playlist_updater(playlist_id):
         else:
             break
 
-    tracks_to_remove = []
-    tracks_to_add = []
-
-    playlist = sp.playlist_items(playlist_id=playlist_id)
-    # order = 0
-    # for item in playlist['items']:
-    #     link = item["external_urls"].get("url")
-    #     if link not in spotify_searched_tracks:
-    #         # Remove from playlist at end
-    #         tracks_to_remove.append(link)
     sp.playlist_replace_items(playlist_id, spotify_searched_tracks)
     # Update the playlist description to show when the playlist was last updated
     sp.playlist_change_details(playlist_id,
-                               description=" Last updated - {} - A playlist featuring a bunch of tracks I like right "
-                                           "now and ones I have loved over the years."
-                                           " Tracked using last.fm API with playcounts. "
-                                           "Kept up to date by my bot Cambot.".format(datetime.date.today()))
+                               description=" Last updated - {} - {}".format(datetime.date.today(),
+                                                                            config.rhitons_selection_description))
 
     # sp.user_playlist_remove_all_occurrences_of_tracks(user=spotify_username, playlist_id=playlist_id, tracks=tracks_to_remove)
 
