@@ -21,7 +21,7 @@ Once that has been calculated, it passes the songs onto a file that searches spo
 
 here is an output of the ordered dict this produces. The key is the artist and track name and the value is the score assigned to the track based on listening trends, which all depends on how much weight you assign to each timeframe.
 
-![Dynamic_playlist_algorithm_score](https://raw.githubusercontent.com/ryancambray/cambot/master/examples/dynamic_playlist_example.JPG)
+![Dynamic_playlist_algorithm_score](https://raw.githubusercontent.com/ryancambray/cambot/master/examples/dynamic_playlist_example.PNG)
 
 Playlist here: https://open.spotify.com/playlist/09mHNJgzOgdUZksMrohoPH?si=M92bCkByTm2UMf1s7_l77w
 
