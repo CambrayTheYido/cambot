@@ -12,7 +12,7 @@ twython
 pymongo
 python-dateutil
 
-python_version = "3.6"
+See Pipfile for dependency versions.
 
 ### dynamic_playlister.py
 
