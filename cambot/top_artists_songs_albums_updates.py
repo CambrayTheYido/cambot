@@ -5,14 +5,13 @@ import argparse
 import config
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-import spotipy.util as util
 import twitter_handles
 import datetime
 from dateutil.relativedelta import *
 from time import sleep
-import os
 import pymongo
 from math import ceil
+import logging
 
 # PyMongo
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
@@ -67,6 +66,8 @@ tweet = True
 add_to_database = False
 
 NO_UPDATE_NEEDED = "Information up to date and already tweeted."
+
+logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
 
 def get_latest_tweet():
@@ -125,21 +126,21 @@ def singular_top_update(period, top, type):
                 tweetStr = "{} \n\n{} \n\nThis replaces the previous top {} '{}' which stood for {} days {} hours \n{}".format(
                     get_relevant_time_frame_information(type, period), tweetable_string, type, last_update_string,
                     str(how_long_item_was_top_days), str(how_long_item_was_top_hours), str(item_url))
-                print(tweetStr, flush=True)
+                logging.info(tweetStr)
                 if tweet:
                     api.update_status(status=tweetStr)
                     mycol.update_one(mongo_search_term, update_mongo)
                     # Just to reduce the spam load a little.
                     sleep(5)
             except:
-                print("Could not tweet latest {} update".format(type), flush=True)
+                logging.warning("Could not tweet latest {} update".format(type))
         else:
-            print("No update needed for {} {}".format(type, period))
+            logging.info("No update needed for {} {}".format(type, period))
 
     else:
         mycol.insert_one({"type": type, "period": period, "value": search_str, "timestamp": datetime.datetime.utcnow()})
         # Try that again!
-        print("Recursion!")
+        logging.debug("Recursion!")
         singular_top_update(period, top, type)
         return
 
@@ -169,7 +170,7 @@ def gather_relevant_information(type, time_frame, limit):
                                                                              type.capitalize(),
                                                                              readable_time_frame,
                                                                              cambot_hashtag)
-        print(first_tweet, flush=True)
+        logging.info(first_tweet)
 
         # Tweet the first tweet to get the ball rolling, grab the ID of the tweet while we're at it
         if tweet:
@@ -195,7 +196,7 @@ def search_spotify(search_string, type):
         url = item['external_urls']
         url = url.get('spotify')
     if url == '':
-        print('No results found in spotify search for {}'.format(search_string), flush=True)
+        logging.info('No results found in spotify search for {}'.format(search_string))
     return url
 
 
@@ -231,7 +232,7 @@ def chain_updates(list_of_top_items, latest_tweet, type, cambot_hashtag):
             latest_tweet = get_latest_tweet()
             sleep(30)
 
-        print(add_to_tweet, flush=True)
+        logging.info(add_to_tweet)
 
         tweet_count += 1
         if tweet_count > limit:
@@ -279,9 +280,9 @@ limit = args.limit
 
 if tweet_args:
     tweet = False
-    print('Tweeting has been disabled', flush=True)
+    logging.info('Tweeting has been disabled')
 if include_twitter_handles:
-    print('Artists names will be replaced with their twitter handle', flush=True)
+    logging.info('Artists names will be replaced with their twitter handle')
     if include_twitter_handles == "add":
         # Add to the database
         add_to_database = True
