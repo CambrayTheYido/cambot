@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import datetime
+import logging
 
 import spotipy
 from twython import Twython
@@ -30,8 +31,8 @@ twitter_access_token = config.twitter_access_token
 twitter_access_token_secret = config.twitter_access_token_secret
 
 # Spotify Token
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_secret=client_secret, client_id=client_id, redirect_uri="http://localhost:8888/callback"))
-
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_secret=client_secret, client_id=client_id,
+                                               redirect_uri="http://localhost:8888/callback"))
 
 # Twitter object
 api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter_access_token_secret)
@@ -49,6 +50,8 @@ add_to_database = False
 TWEET = True
 
 
+# We run this on the first day of each month in the early hours of the morning, so the month we actually want to
+# insert into the playlist name is the previous month
 def get_current_month():
     now = datetime.datetime.now()
     month = now.month
@@ -109,7 +112,6 @@ def create_playlist(time_range, limit):
         playlist_name = "Top tracks over the last few years as of {} {}".format(get_current_month(),
                                                                                 get_correct_year())
 
-
     # Create a new playlist
     playlist = sp.user_playlist_create(user=spotify_username, name=playlist_name, public=True)
     playlist_id = playlist.get('uri')
@@ -130,7 +132,7 @@ def create_playlist(time_range, limit):
 
         list_of_tracks_to_add.append(track['uri'])
 
-    sp.user_playlist_add_tracks(user=spotify_username, playlist_id=playlist_id, tracks=list_of_tracks_to_add)
+    sp.playlist_add_items(playlist_id=playlist_id, items=list_of_tracks_to_add)
 
     playlist_link_url = playlist['external_urls']
     playlist_link_url = playlist_link_url.get('spotify')
@@ -140,7 +142,7 @@ def create_playlist(time_range, limit):
         if len(tweet_str) + len(artist) <= 280:
             tweet_str += artist + ", "
     tweet_str = tweet_str[:-2] + "."
-    print(tweet_str)
+    logging.info(tweet_str)
     if TWEET:
         api.update_status(status=tweet_str)
 
@@ -150,6 +152,7 @@ def check_number(value):
     if ivalue <= 0 or ivalue > 50:
         raise argparse.ArgumentTypeError("%s is an invalid int value. The limit is between 1 and 50" % value)
     return ivalue
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--timeframe",
@@ -170,11 +173,11 @@ add = args.at
 tweet = args.tweet
 
 if add == 'add':
-    print("adding artist names to the database.", flush=True)
+    logging.debug("adding artist names to the database.", flush=True)
     add_to_database = True
 
 if tweet:
-    print("TEST MODE: not tweeting to the account provided")
+    logging.info("TEST MODE: not tweeting to the account provided")
     TWEET = False
 
 create_playlist(time_range, limit)
