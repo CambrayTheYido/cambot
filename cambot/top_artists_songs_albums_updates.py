@@ -1,47 +1,15 @@
 #!/usr/bin/env python
-import pylast
-from twython import Twython
 import argparse
-import config
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
-import twitter_handles
 import datetime
-from dateutil.relativedelta import *
-from time import sleep
-import pymongo
-from math import ceil
 import logging
+from math import ceil
+from time import sleep
+import threading
+from dateutil.relativedelta import *
 
-# PyMongo
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+import twitter_handles as t
 
-mydb = myclient["mydatabase"]
-
-# Twitter API
-twitter_api_key = config.twitter_api_key
-twitter_api_secret = config.twitter_api_secret
-twitter_access_token = config.twitter_access_token
-twitter_access_token_secret = config.twitter_access_token_secret
-
-# Spotify Token
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=config.spotify_scope, client_secret=config.spotify_client_secret,
-                                               client_id=config.spotify_client_id,
-                                               redirect_uri="http://localhost:8888/callback"))
-
-# LastFM API
-last_fm_api_key = config.lastfm_api_key
-last_fm_api_secret = config.lastfm_api_secret
-last_fm_username = config.lastfm_username
-
-# Twitter object
-api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter_access_token_secret)
-
-# LastFM network objects
-network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username)
-user = network.get_user(last_fm_username)
-
-age_of_account_in_years_months = datetime.datetime.utcfromtimestamp(int(user.get_registered())).strftime('%Y-%m-%d')
+age_of_account_in_years_months = datetime.datetime.utcfromtimestamp(int(t.user.get_registered())).strftime('%Y-%m-%d')
 
 age_of_account_in_years_months = datetime.date(int(age_of_account_in_years_months.split('-')[0]),
                                                int(age_of_account_in_years_months.split('-')[1]),
@@ -67,13 +35,11 @@ add_to_database = False
 
 NO_UPDATE_NEEDED = "Information up to date and already tweeted."
 
-logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
-
 
 def get_latest_tweet():
     the_latest_tweet = None
     while the_latest_tweet is None:
-        the_latest_tweet = api.get_user_timeline(screen_name="BotCambray")
+        the_latest_tweet = t.api.get_user_timeline(screen_name="BotCambray")
         the_latest_tweet = the_latest_tweet[0].get('id')
     return the_latest_tweet
 
@@ -102,17 +68,20 @@ def singular_top_update(period, top, type):
     if type == "album":
         tweetable_string = str(search_str.split("-")[1]).strip()
     else:
-        tweetable_string = twitter_handles.check_or_add_artist_names_to_database(search_str, add_to_database)
+        tweetable_string = t.check_or_add_artist_names_to_database(search_str, add_to_database)
 
-    mydb = myclient["artist_names"]
+    mydb = t.myclient["artist_names"]
     mycol = mydb["singular_top_update"]
 
     mongo_search_term = {"type": type, "period": period}
 
-    if mycol.find_one(mongo_search_term) != None:
+    if mycol.find_one(mongo_search_term) is not None:
         mongo_return = mycol.find_one(mongo_search_term)
 
         if mongo_return["value"] != search_str:
+            logging.info(
+                "Update for: {} {}. Old value: '{}' New Value: '{}'".format(period, type, mongo_return["value"],
+                                                                            search_str))
             update_mongo = {"$set": {"value": search_str, "timestamp": datetime.datetime.utcnow()}}
             # Get the timestamp from the previous update first though
             timestamp_from_last_update = mongo_return["timestamp"]
@@ -128,10 +97,9 @@ def singular_top_update(period, top, type):
                     str(how_long_item_was_top_days), str(how_long_item_was_top_hours), str(item_url))
                 logging.info(tweetStr)
                 if tweet:
-                    api.update_status(status=tweetStr)
+                    t.api.update_status(status=tweetStr)
+                    # Tweeting is disabled usually for testing. Do not update the DB if we are not tweeting!
                     mycol.update_one(mongo_search_term, update_mongo)
-                    # Just to reduce the spam load a little.
-                    sleep(5)
             except:
                 logging.warning("Could not tweet latest {} update".format(type))
         else:
@@ -150,11 +118,11 @@ def gather_relevant_information(type, time_frame, limit):
 
     if type == 'artist':
         # determine period to use
-        top = user.get_top_artists(period=time_frame, limit=limit)
+        top = t.user.get_top_artists(period=time_frame, limit=limit)
     elif type == 'track':
-        top = user.get_top_tracks(period=time_frame, limit=limit)
+        top = t.user.get_top_tracks(period=time_frame, limit=limit)
     elif type == 'album':
-        top = user.get_top_albums(period=time_frame, limit=limit)
+        top = t.user.get_top_albums(period=time_frame, limit=limit)
 
     if top is None:
         raise Exception("Unable to get information from last fm. Type used:{}. Time_frame used: {}.")
@@ -174,7 +142,7 @@ def gather_relevant_information(type, time_frame, limit):
 
         # Tweet the first tweet to get the ball rolling, grab the ID of the tweet while we're at it
         if tweet:
-            api.update_status(status=first_tweet)
+            t.api.update_status(status=first_tweet)
         latest_tweet = get_latest_tweet()
 
         # Now we can chain the following tweets onto the first tweet
@@ -184,7 +152,7 @@ def gather_relevant_information(type, time_frame, limit):
 
 
 def search_spotify(search_string, type):
-    result = sp.search(search_string, limit='1', type=type)
+    result = t.sp.search(search_string, limit='1', type=type)
     if type == 'artist':
         result = result['artists']['items']
     elif type == 'track':
@@ -205,7 +173,7 @@ def replace_top_item_artist_with_handle(top_item):
     top_item_split = str(top_item[0]).split('-', maxsplit=1)
     rest_of_split = str(top_item_split[1])
     artist_extract = str(top_item_split[0]).strip()
-    artist_extract = twitter_handles.check_or_add_artist_names_to_database(artist_extract, add_to_database)
+    artist_extract = t.check_or_add_artist_names_to_database(artist_extract, add_to_database)
     return str(artist_extract) + " -" + str(rest_of_split)
 
 
@@ -220,15 +188,15 @@ def chain_updates(list_of_top_items, latest_tweet, type, cambot_hashtag):
         else:
             track_artist_album = str(top_item[0])
             if include_twitter_handles and type == 'artist':
-                track_artist_album = twitter_handles.check_or_add_artist_names_to_database(track_artist_album,
-                                                                                           add_to_database)
+                track_artist_album = t.check_or_add_artist_names_to_database(track_artist_album,
+                                                                             add_to_database)
         playcount = str(top_item[1])
 
         add_to_tweet = "{}. {} [{}{}]\n\n{}\n\n{}".format(tweet_count, track_artist_album, playcount, PLAYS,
                                                           search_spotify(track_artist_album_search, type),
                                                           cambot_hashtag)
         if tweet and add_to_tweet != 'True':
-            api.update_status(status=add_to_tweet, in_reply_to_status_id=latest_tweet)
+            t.api.update_status(status=add_to_tweet, in_reply_to_status_id=latest_tweet)
             latest_tweet = get_latest_tweet()
             sleep(30)
 
@@ -287,34 +255,34 @@ if include_twitter_handles:
         # Add to the database
         add_to_database = True
 
-if artist != None:
+if artist is not None:
     if artist == "all":
         for choice in choices:
             if choice == "all":
                 break
-            gather_relevant_information('artist', choice, limit)
+            threading.Thread(target=gather_relevant_information, args=('artist', choice, limit,)).start()
             if limit > 1:
                 sleep(30)
     else:
         gather_relevant_information('artist', artist, limit)
 
-if track != None:
+if track is not None:
     if track == "all":
         for choice in choices:
             if choice == "all":
                 break
-            gather_relevant_information('track', choice, limit)
+            threading.Thread(target=gather_relevant_information, args=('track', choice, limit,)).start()
             if limit > 1:
                 sleep(30)
     else:
         gather_relevant_information('track', track, limit)
 
-if album != None:
+if album is not None:
     if album == "all":
         for choice in choices:
             if choice == "all":
                 break
-            gather_relevant_information('album', choice, limit)
+            threading.Thread(target=gather_relevant_information, args=('album', choice, limit,)).start()
             if limit > 1:
                 sleep(30)
     else:
