@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 import datetime
-import sys
+import logging
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-from spotipy.oauth2 import SpotifyClientCredentials
 import config
 import twitter_handles as t
 import pylast
-import pymongo
 import argparse
 from collections import defaultdict, OrderedDict
 import operator
@@ -43,6 +41,7 @@ user = network.get_user(last_fm_username)
 
 
 def dynamic_playlist_updater(playlist_id):
+    logging.info("Getting all user top tracks from all potential time frames. This is a lot of data so takes a second or two")
     top_tracks = [user.get_top_tracks(period="7day", limit=500),
                   user.get_top_tracks(period="1month", limit=500),
                   user.get_top_tracks(period="3month", limit=500),
@@ -65,7 +64,7 @@ def dynamic_playlist_updater(playlist_id):
         sorted(list_of_songs_and_their_weight.items(), key=operator.itemgetter(1), reverse=True))
 
     # Print out to the console the weighting each song has, for research purposes
-    print(json.dumps(sorted_tracks, indent=4), flush=True)
+    logging.info(json.dumps(sorted_tracks, indent=4))
 
     # Get a list of tracks from sorted list
     spotify_searched_tracks = []
@@ -78,7 +77,7 @@ def dynamic_playlist_updater(playlist_id):
                 limit += 1
         else:
             break
-
+    logging.info("Updating spotify playlist and description")
     sp.playlist_replace_items(playlist_id, spotify_searched_tracks)
     # Update the playlist description to show when the playlist was last updated
     sp.playlist_change_details(playlist_id,
