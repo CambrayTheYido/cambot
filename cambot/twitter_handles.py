@@ -3,11 +3,43 @@
 
 import pymongo
 import time
+import logging
+import config
+import pylast
+from twython import Twython
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+
+#TODO: Update this files name as its no longer just a holder for twitter handles when it was first introduced back in 2017 ore whatever!!
 
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 
 mydb = myclient["mydatabase"]
 
+logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+
+# Twitter API
+twitter_api_key = config.twitter_api_key
+twitter_api_secret = config.twitter_api_secret
+twitter_access_token = config.twitter_access_token
+twitter_access_token_secret = config.twitter_access_token_secret
+
+# Spotify Token
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=config.spotify_scope, client_secret=config.spotify_client_secret,
+                                               client_id=config.spotify_client_id,
+                                               redirect_uri="http://localhost:8888/callback"))
+
+# LastFM API
+last_fm_api_key = config.lastfm_api_key
+last_fm_api_secret = config.lastfm_api_secret
+last_fm_username = config.lastfm_username
+
+# Twitter object
+api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter_access_token_secret)
+
+# LastFM network objects
+network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username)
+user = network.get_user(last_fm_username)
 
 def search_spotify(sp_instance, search_string, type):
     searchies = search_string.replace(" -", "")
@@ -29,7 +61,7 @@ def search_spotify(sp_instance, search_string, type):
         url = item['external_urls']
         url = url.get('spotify')
     if url == '':
-        print('No results found in spotify search for {}'.format(search_string), flush=True)
+        logging.info('No results found in spotify search for {}'.format(search_string))
         return
     return url
 
@@ -45,7 +77,7 @@ def check_or_add_artist_names_to_database(artist_name, add_to_database):
         if not add_to_database:
             return artist_name
         # The artist was not found, therefore add it to the database.
-        print(
+        logging.info(
             "Please enter the twitter handle for the following artist: {}. If they do not have a handle, enter 'no'".format(
                 artist_name))
         handle = input()
@@ -53,17 +85,17 @@ def check_or_add_artist_names_to_database(artist_name, add_to_database):
 
         # Clarity checking to avoid accidental inserts
         if len(handle) == 0:
-            print("You entered nothing (by mistake?)")
-            handle = input()
+            logging.warning("You entered nothing (by mistake?).")
+            check_or_add_artist_names_to_database(artist_name, add_to_database)
 
         if handle == "no":
             # Do not insert into db
-            print("Skipping artist. Not inserting into DB")
+            logging.info("Skipping artist. Not inserting into DB")
             return artist_name
         else:
             add = {"name": artist_name.lower(), "handle": handle}
             x = mycol.insert_one(add)
-            print("Succesfully added '{}' to the database".format(artist_name))
+            logging.info("Succesfully added '{}' to the database".format(artist_name))
             # Now return the handle
             return handle
 
