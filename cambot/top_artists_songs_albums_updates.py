@@ -2,7 +2,7 @@
 import argparse
 import datetime
 import logging
-from math import ceil
+from math import floor
 from time import sleep
 import threading
 from dateutil.relativedelta import *
@@ -46,9 +46,9 @@ def get_latest_tweet():
 
 def get_relevant_time_frame_information(type, time_frame):
     if time_frame == "7day":
-        return "New #Top{}Update of the week".format(type.title(), time_frame)
+        return "New #Top{}Update of the last 7 days".format(type.title(), time_frame)
     elif time_frame == "1month":
-        return "New #Top{}Update of the month".format(type.title(), time_frame)
+        return "New #Top{}Update of the last month".format(type.title(), time_frame)
     elif time_frame == "3month":
         return "New #Top{}Update of the last 3 months".format(type.title(), time_frame)
     elif time_frame == "6month":
@@ -90,7 +90,7 @@ def singular_top_update(period, top, type):
             try:
                 item_url = search_spotify(search_str, type)
                 how_long_item_was_top_days = abs((datetime.datetime.utcnow() - timestamp_from_last_update).days)
-                how_long_item_was_top_hours = ceil(
+                how_long_item_was_top_hours = floor(
                     (datetime.datetime.utcnow() - timestamp_from_last_update).seconds / 3600 % 24)
                 tweetStr = "{} \n\n{} \n\nThis replaces the previous top {} '{}' which stood for {} days {} hours \n{}".format(
                     get_relevant_time_frame_information(type, period), tweetable_string, type, last_update_string,
@@ -106,11 +106,8 @@ def singular_top_update(period, top, type):
             logging.info("No update needed for {} {}".format(type, period))
 
     else:
+        # For when the database is empty. Starting from scratch, insert each element into the DB. From now is when we track the data
         mycol.insert_one({"type": type, "period": period, "value": search_str, "timestamp": datetime.datetime.utcnow()})
-        # Try that again!
-        logging.debug("Recursion!")
-        singular_top_update(period, top, type)
-        return
 
 
 def gather_relevant_information(type, time_frame, limit):
