@@ -2,49 +2,10 @@
 import datetime
 import logging
 
-import spotipy
-from twython import Twython
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
 import config
-from spotipy.oauth2 import SpotifyOAuth
-import twitter_handles as t
+import cambot_utils as utils
 import argparse
-import pylast
-import pymongo
 from collections import defaultdict, OrderedDict
-
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-
-mydb = myclient["mydatabase"]
-
-# Spotify API
-scope = config.spotify_scope
-spotify_username = config.spotify_username
-client_id = config.spotify_client_id
-client_secret = config.spotify_client_secret
-
-# Twitter API
-twitter_api_key = config.twitter_api_key
-twitter_api_secret = config.twitter_api_secret
-twitter_access_token = config.twitter_access_token
-twitter_access_token_secret = config.twitter_access_token_secret
-
-# Spotify Token
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_secret=client_secret, client_id=client_id,
-                                               redirect_uri="http://localhost:8888/callback"))
-
-# Twitter object
-api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter_access_token_secret)
-
-# LastFM API
-last_fm_api_key = config.lastfm_api_key
-last_fm_api_secret = config.lastfm_api_secret
-last_fm_username = config.lastfm_username
-
-# LastFM network objects
-network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username)
-user = network.get_user(last_fm_username)
 
 add_to_database = False
 TWEET = True
@@ -113,11 +74,11 @@ def create_playlist(time_range, limit):
                                                                                 get_correct_year())
 
     # Create a new playlist
-    playlist = sp.user_playlist_create(user=spotify_username, name=playlist_name, public=True)
+    playlist = utils.sp.user_playlist_create(user=config.spotify_username, name=playlist_name, public=True)
     playlist_id = playlist.get('uri')
 
     # Get top tracks from the chosen time range and the limit
-    top_tracks = sp.current_user_top_tracks(time_range=time_range, limit=limit)
+    top_tracks = utils.sp.current_user_top_tracks(time_range=time_range, limit=limit)
 
     list_of_tracks_to_add = []
     some_artists = []
@@ -132,7 +93,7 @@ def create_playlist(time_range, limit):
 
         list_of_tracks_to_add.append(track['uri'])
 
-    sp.playlist_add_items(playlist_id=playlist_id, items=list_of_tracks_to_add)
+    utils.sp.playlist_add_items(playlist_id=playlist_id, items=list_of_tracks_to_add)
 
     playlist_link_url = playlist['external_urls']
     playlist_link_url = playlist_link_url.get('spotify')
@@ -144,7 +105,7 @@ def create_playlist(time_range, limit):
     tweet_str = tweet_str[:-2] + "."
     logging.info(tweet_str)
     if TWEET:
-        api.update_status(status=tweet_str)
+        utils.api.update_status(status=tweet_str)
 
 
 def check_number(value):

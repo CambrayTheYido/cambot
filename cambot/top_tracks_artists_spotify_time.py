@@ -4,7 +4,7 @@ import spotipy.util as util
 from twython import Twython
 import config
 import argparse
-import twitter_handles as t
+import utils as t
 
 # Twitter API
 twitter_api_key = config.twitter_api_key
@@ -75,7 +75,7 @@ def get_top_tracks(time_range):
             artist = list_of_artists['name']
 
             if include_artist_twitter_handle:
-                artist = t.is_artist_in_dict(artist)
+                artist = utils.is_artist_in_dict(artist)
 
             if len(tweet_str) + len(song_name) + len(artist) <= 278:
                 tweet_str += str(artist) + " - " + track['name'] + "\n"

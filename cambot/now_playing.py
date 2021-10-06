@@ -4,7 +4,7 @@ import time
 import pylast
 from twython import Twython
 
-import twitter_handles
+import utils
 import config
 
 # Twitter API

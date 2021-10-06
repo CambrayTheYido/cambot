@@ -1,53 +1,24 @@
 #!/usr/bin/env python
+
 import datetime
 import logging
-
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
 import config
-import twitter_handles as t
-import pylast
+import cambot_utils as utils
 import argparse
 from collections import defaultdict, OrderedDict
 import operator
 import json
-
-# Spotify API
-spotify_username = config.spotify_username
-client_id = config.spotify_client_id
-client_secret = config.spotify_client_secret
-scope = config.spotify_scope
-
-# Twitter API
-twitter_api_key = config.twitter_api_key
-twitter_api_secret = config.twitter_api_secret
-twitter_access_token = config.twitter_access_token
-twitter_access_token_secret = config.twitter_access_token_secret
-
-# Spotify Token
-CACHE = ".cache-" + "test"
-sp = spotipy.Spotify(
-    auth_manager=SpotifyOAuth(scope=scope, cache_path=CACHE, client_secret=client_secret, client_id=client_id,
-                              redirect_uri="http://localhost:8888/callback"))
-
-# LastFM API
-last_fm_api_key = config.lastfm_api_key
-last_fm_api_secret = config.lastfm_api_secret
-last_fm_username = config.lastfm_username
-
-# LastFM network objects
-network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username)
-user = network.get_user(last_fm_username)
+from math import factorial, ceil
 
 
 def dynamic_playlist_updater(playlist_id):
     logging.info("Getting all user top tracks from all potential time frames. This is a lot of data so takes a second or two")
-    top_tracks = [user.get_top_tracks(period="7day", limit=500),
-                  user.get_top_tracks(period="1month", limit=500),
-                  user.get_top_tracks(period="3month", limit=500),
-                  user.get_top_tracks(period="6month", limit=500),
-                  user.get_top_tracks(period="12month", limit=500),
-                  user.get_top_tracks(period="overall", limit=500)]
+    top_tracks = [utils.user.get_top_tracks(period="7day", limit=100),
+                  utils.user.get_top_tracks(period="1month", limit=100),
+                  utils.user.get_top_tracks(period="3month", limit=100),
+                  utils.user.get_top_tracks(period="6month", limit=100),
+                  utils.user.get_top_tracks(period="12month", limit=100),
+                  utils.user.get_top_tracks(period="overall", limit=100)]
 
     # TODO: user.getRecentTracks with time_ranges. Use same time range song weights. e.g. 1 week all 100 for each hit. 1 month (minus that week thats already been counted)
 
@@ -58,7 +29,7 @@ def dynamic_playlist_updater(playlist_id):
             track_and_artist = str(track[0])
             scrobbles = int(track[1])
             # Add the song to the dict if not exist, and either way update that songs weighting
-            list_of_songs_and_their_weight[track_and_artist] += (calculate_song_weight(reference_count) * scrobbles)
+            list_of_songs_and_their_weight[track_and_artist] += ceil((calculate_song_weight(reference_count) * scrobbles))
         reference_count += 1
     sorted_tracks = OrderedDict(
         sorted(list_of_songs_and_their_weight.items(), key=operator.itemgetter(1), reverse=True))
@@ -68,42 +39,63 @@ def dynamic_playlist_updater(playlist_id):
 
     # Get a list of tracks from sorted list
     spotify_searched_tracks = []
+    twitter_summary_tracks = []
     limit = 0
     for key, value in sorted_tracks.items():
         if limit < 100:
-            search = t.search_spotify(sp, key, "track")
+            search = utils.search_spotify(utils.sp, key, "track")
             if search is not None:
                 spotify_searched_tracks.append(search)
                 limit += 1
         else:
             break
-    logging.info("Updating spotify playlist and description")
-    sp.playlist_replace_items(playlist_id, spotify_searched_tracks)
-    # Update the playlist description to show when the playlist was last updated
-    sp.playlist_change_details(playlist_id,
+    if not TESTING:
+        logging.info("Updating spotify playlist and description")
+        utils.sp.playlist_replace_items(playlist_id, spotify_searched_tracks)
+        # Update the playlist description to show when the playlist was last updated
+        utils.sp.playlist_change_details(playlist_id,
                                description=" Last updated - {} - {}".format(datetime.date.today(),
                                                                             config.rhitons_selection_description))
-
-    # sp.user_playlist_remove_all_occurrences_of_tracks(user=spotify_username, playlist_id=playlist_id, tracks=tracks_to_remove)
-
+    else:
+        logging.info("Did not update the playlist. Testing flag enabled")
 
 def calculate_song_weight(reference_count):
+    # Last 7 days
     if reference_count == 1:
-        return 250
+        return SCORE_WEIGHTING * 100
+    # Last month
     elif reference_count == 2:
-        return 110
+        return (SCORE_WEIGHTING / reference_count) * 80
+    # Last 3 months
     elif reference_count == 3:
-        return 50
+        return (SCORE_WEIGHTING / reference_count) * 64
+    # Last 6 months
     elif reference_count == 4:
-        return 30
+        return (SCORE_WEIGHTING / reference_count) * 53
+    # Last year
     elif reference_count == 5:
-        return 20
+        return (SCORE_WEIGHTING / reference_count) * 42
+    # Overall
     elif reference_count == 6:
-        return 12
+        return (SCORE_WEIGHTING / reference_count) * 34
+
+def check_number(value):
+    ivalue = int(value)
+    if ivalue <= 0 or ivalue > 10:
+        raise argparse.ArgumentTypeError("%s is an invalid int value. The limit is between 1 and 10" % value)
+    return ivalue
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--id", help="Playlist ID to update")
+parser.add_argument("--id", help="Playlist ID to update", required=True)
+parser.add_argument("--weighting", "-w", type=check_number, help="A number between 1-10 that tells the dynamic playlister which time frames to give more bearing to. For instance, a value of 9 will give songs that have been played a lot over the years more score than those songs that have been discovered by the user more recently and played a lot but have no scrobbles from the long term timeframe. A value of 1 will output a playlist more atuned to songs that have been played recently.", default=5)
+parser.add_argument("--testing", help="Flag enables no updates to the spotify playlist / tweets.", action="store_true")
 args = parser.parse_args()
+
+SCORE_WEIGHTING = args.weighting
+TESTING = False
+if args.testing:
+    logging.info("Testing mode")
+    TESTING = True
 
 dynamic_playlist_updater(str(args.id))
