@@ -10,8 +10,6 @@ from twython import Twython
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
-#TODO: Update this files name as its no longer just a holder for twitter handles when it was first introduced back in 2017 ore whatever!!
-
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 
 mydb = myclient["mydatabase"]
@@ -38,7 +36,7 @@ last_fm_username = config.lastfm_username
 api = Twython(twitter_api_key, twitter_api_secret, twitter_access_token, twitter_access_token_secret)
 
 # LastFM network objects
-network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username)
+network = pylast.LastFMNetwork(api_key=last_fm_api_key, api_secret=last_fm_api_secret, username=last_fm_username, password_hash=pylast.md5(config.lastfm_password))
 user = network.get_user(last_fm_username)
 
 def search_spotify(sp_instance, search_string, type):

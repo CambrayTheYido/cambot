@@ -6,7 +6,7 @@ import pylast
 import sys
 from twython import Twython
 import argparse
-import cambot.config as config
+import config
 
 # Twitter API
 twitter_api_key = config.twitter_api_key

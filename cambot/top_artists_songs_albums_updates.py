@@ -6,10 +6,9 @@ from math import floor
 from time import sleep
 import threading
 from dateutil.relativedelta import *
+import cambot_utils as utils
 
-import twitter_handles as t
-
-age_of_account_in_years_months = datetime.datetime.utcfromtimestamp(int(t.user.get_registered())).strftime('%Y-%m-%d')
+age_of_account_in_years_months = datetime.datetime.utcfromtimestamp(int(utils.user.get_registered())).strftime('%Y-%m-%d')
 
 age_of_account_in_years_months = datetime.date(int(age_of_account_in_years_months.split('-')[0]),
                                                int(age_of_account_in_years_months.split('-')[1]),
@@ -39,7 +38,7 @@ NO_UPDATE_NEEDED = "Information up to date and already tweeted."
 def get_latest_tweet():
     the_latest_tweet = None
     while the_latest_tweet is None:
-        the_latest_tweet = t.api.get_user_timeline(screen_name="BotCambray")
+        the_latest_tweet = utils.api.get_user_timeline(screen_name="BotCambray")
         the_latest_tweet = the_latest_tweet[0].get('id')
     return the_latest_tweet
 
@@ -68,9 +67,9 @@ def singular_top_update(period, top, type):
     if type == "album":
         tweetable_string = str(search_str.split("-")[1]).strip()
     else:
-        tweetable_string = t.check_or_add_artist_names_to_database(search_str, add_to_database)
+        tweetable_string = utils.check_or_add_artist_names_to_database(search_str, add_to_database)
 
-    mydb = t.myclient["artist_names"]
+    mydb = utils.myclient["artist_names"]
     mycol = mydb["singular_top_update"]
 
     mongo_search_term = {"type": type, "period": period}
@@ -97,7 +96,7 @@ def singular_top_update(period, top, type):
                     str(how_long_item_was_top_days), str(how_long_item_was_top_hours), str(item_url))
                 logging.info(tweetStr)
                 if tweet:
-                    t.api.update_status(status=tweetStr)
+                    utils.api.update_status(status=tweetStr)
                     # Tweeting is disabled usually for testing. Do not update the DB if we are not tweeting!
                     mycol.update_one(mongo_search_term, update_mongo)
             except:
@@ -115,11 +114,11 @@ def gather_relevant_information(type, time_frame, limit):
 
     if type == 'artist':
         # determine period to use
-        top = t.user.get_top_artists(period=time_frame, limit=limit)
+        top = utils.user.get_top_artists(period=time_frame, limit=limit)
     elif type == 'track':
-        top = t.user.get_top_tracks(period=time_frame, limit=limit)
+        top = utils.user.get_top_tracks(period=time_frame, limit=limit)
     elif type == 'album':
-        top = t.user.get_top_albums(period=time_frame, limit=limit)
+        top = utils.user.get_top_albums(period=time_frame, limit=limit)
 
     if top is None:
         raise Exception("Unable to get information from last fm. Type used:{}. Time_frame used: {}.")
@@ -139,7 +138,7 @@ def gather_relevant_information(type, time_frame, limit):
 
         # Tweet the first tweet to get the ball rolling, grab the ID of the tweet while we're at it
         if tweet:
-            t.api.update_status(status=first_tweet)
+            utils.api.update_status(status=first_tweet)
         latest_tweet = get_latest_tweet()
 
         # Now we can chain the following tweets onto the first tweet
@@ -149,7 +148,7 @@ def gather_relevant_information(type, time_frame, limit):
 
 
 def search_spotify(search_string, type):
-    result = t.sp.search(search_string, limit='1', type=type)
+    result = utils.sp.search(search_string, limit='1', type=type)
     if type == 'artist':
         result = result['artists']['items']
     elif type == 'track':
@@ -170,7 +169,7 @@ def replace_top_item_artist_with_handle(top_item):
     top_item_split = str(top_item[0]).split('-', maxsplit=1)
     rest_of_split = str(top_item_split[1])
     artist_extract = str(top_item_split[0]).strip()
-    artist_extract = t.check_or_add_artist_names_to_database(artist_extract, add_to_database)
+    artist_extract = utils.check_or_add_artist_names_to_database(artist_extract, add_to_database)
     return str(artist_extract) + " -" + str(rest_of_split)
 
 
@@ -185,7 +184,7 @@ def chain_updates(list_of_top_items, latest_tweet, type, cambot_hashtag):
         else:
             track_artist_album = str(top_item[0])
             if include_twitter_handles and type == 'artist':
-                track_artist_album = t.check_or_add_artist_names_to_database(track_artist_album,
+                track_artist_album = utils.check_or_add_artist_names_to_database(track_artist_album,
                                                                              add_to_database)
         playcount = str(top_item[1])
 
@@ -193,7 +192,7 @@ def chain_updates(list_of_top_items, latest_tweet, type, cambot_hashtag):
                                                           search_spotify(track_artist_album_search, type),
                                                           cambot_hashtag)
         if tweet and add_to_tweet != 'True':
-            t.api.update_status(status=add_to_tweet, in_reply_to_status_id=latest_tweet)
+            utils.api.update_status(status=add_to_tweet, in_reply_to_status_id=latest_tweet)
             latest_tweet = get_latest_tweet()
             sleep(30)
 
