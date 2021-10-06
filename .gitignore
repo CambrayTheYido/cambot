@@ -6,3 +6,5 @@
 /.idea
 /cambot/__pycache__
 Pipfile.lock
+*.cache*
+*.vscode
