@@ -1,1 +1,0 @@
-python top_artists_songs_albums_updates.py --limit 1 --track all --album all --artist all
