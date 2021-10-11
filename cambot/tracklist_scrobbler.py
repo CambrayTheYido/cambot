@@ -18,7 +18,7 @@ def check_date(date):
             timestamp = datetime(year=int(date_and_time_split[0]), month=int(date_and_time_split[1]), day=int(date_and_time_split[2]), 
                         hour=int(date_and_time_split[3]), minute=int(date_and_time_split[4]))
         except IndexError as e:
-            logging.error("Incorrect timestamp format. User input timestamp should be in the format 'YYYY-MM-DD HH-MM-SS'")
+            logging.error("Incorrect timestamp format. User input timestamp should be in the format 'YYYY-MM-DD-HH-MM-SS'")
             logging.error(e)
         if timestamp > date_today or timestamp < timestamp - timedelta(days=14):
             logging.error("Cannot scrobble this date. Either it is in the future or over two weeks ago from current datetime. Please enter a suitable timestamp")
@@ -28,28 +28,35 @@ def check_date(date):
     else:
         return int(time.time())
 
+def clean_artist_string(artist):
+    if "ft." in artist:
+        logging.info("Removing the ft. artist from artist string [{}]. We only need the one artist to keep scrobbles consitent across platforms".format(artist))
+        return artist.split("ft.")[0].strip()
+    return artist
+
 def parse_url(tracklist):
     r = requests.get(tracklist, headers={'User-Agent': UserAgent().firefox })
     soup = BeautifulSoup(r.text, features="html.parser")
 
     for track in soup.find_all("div", itemprop="tracks"):
         track = track.find(itemprop="name")['content']
-        logging.info("Artist and Track: {}".format(track))
-        parse_file_line(track)
+        if track is not None:
+            parse_file_line(track)
+
 
 def parse_file_line(track):
-    if "-" not in track:
+    if " - " not in track:
         logging.warn("Track - [{}] - cannot be scrobbled. Incorrect format".format(track))
         return
 
     track_split = track.split(" - ", maxsplit=1)
     if reverse:
-        artist = track_split[-1].strip()
+        artist = clean_artist_string(track_split[-1].strip)()
         trackname = track_split[0].strip()
         scrobble({"artist":artist, "trackname":trackname})
     else:
         trackname = track_split[-1].strip()
-        artist = track_split[0].strip()
+        artist = clean_artist_string(track_split[0].strip())
         scrobble({"artist":artist, "trackname":trackname})
 
 
@@ -58,17 +65,19 @@ def scrobble(track):
     trackname = track["trackname"]
     timestamp = check_date(date)
 
-    logging.info("Attempting to scrobble '{}'".format(track))
+    logging.info("Attempting to scrobble...")
     logging.info("Artist: {}".format(artist))
     logging.info("Track: {}".format(trackname))
-    logging.info("Timestamp: {}".format(timestamp))
+    logging.info("Timestamp: {} / {}".format(timestamp, datetime.fromtimestamp(timestamp)))
 
     global num_errors
+    global total_tracks_scrobbled
 
     try:
         if not test:
-            if num_errors < 2:
+            if num_errors < 5:
                 utils.network.scrobble(artist=artist, title=trackname, timestamp=timestamp)
+                total_tracks_scrobbled += 1
             else:
                 logging.info("Failed 3 times already. Repeated scrobbles might see us get a temp IP ban so best not waste requests when they are failing. Stop for now!")
     except utils.pylast.MalformedResponseError as e:
@@ -76,9 +85,11 @@ def scrobble(track):
         logging.error(e)
         num_errors += 1
 
-    if num_errors > 2:
+    if num_errors > 5:
         logging.warning("Shutting down.")
         sys.exit()
+
+    logging.info("--------------------------------------------------------")
 
 
 parser = argparse.ArgumentParser()
@@ -103,6 +114,7 @@ test = args.test
 date = args.timestamp
 
 num_errors = 0
+total_tracks_scrobbled = 0
 
 if reverse:
     logging.info("Treating tracklist in %track% - %artist% format")
