@@ -112,6 +112,8 @@ def singular_top_update(period, top, type):
 def gather_relevant_information(type, time_frame, limit):
     top = None
 
+    logging.info("Getting info from last.fm for {}s from last {}".format(type, [value for key, value in time_frames.items() if time_frame in key.lower()][0]))
+
     if type == 'artist':
         # determine period to use
         top = utils.user.get_top_artists(period=time_frame, limit=limit)
@@ -148,6 +150,7 @@ def gather_relevant_information(type, time_frame, limit):
 
 
 def search_spotify(search_string, type):
+    #TODO: REMOVE THIS. It is in utils
     result = utils.sp.search(search_string, limit='1', type=type)
     if type == 'artist':
         result = result['artists']['items']

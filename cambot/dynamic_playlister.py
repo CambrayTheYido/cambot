@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import sys
 import config
 import cambot_utils as utils
 import argparse
@@ -13,29 +14,39 @@ from math import factorial, ceil
 
 def dynamic_playlist_updater(playlist_id):
     logging.info("Getting all user top tracks from all potential time frames. This is a lot of data so takes a second or two")
-    top_tracks = [utils.user.get_top_tracks(period="7day", limit=100),
-                  utils.user.get_top_tracks(period="1month", limit=100),
-                  utils.user.get_top_tracks(period="3month", limit=100),
-                  utils.user.get_top_tracks(period="6month", limit=100),
-                  utils.user.get_top_tracks(period="12month", limit=100),
-                  utils.user.get_top_tracks(period="overall", limit=100)]
+    top_tracks = {"7day"    :utils.user.get_top_tracks(period="7day", limit=100),
+                  "1month"  :utils.user.get_top_tracks(period="1month", limit=100),
+                  "3months" :utils.user.get_top_tracks(period="3month", limit=100),
+                  "6months" :utils.user.get_top_tracks(period="6month", limit=100),
+                  "12months":utils.user.get_top_tracks(period="12month", limit=100),
+                  "overall" :utils.user.get_top_tracks(period="overall", limit=100)}
 
-    # TODO: user.getRecentTracks with time_ranges. Use same time range song weights. e.g. 1 week all 100 for each hit. 1 month (minus that week thats already been counted)
+    logging.info("Done. Parsing information into a playlist ordered by weight. The more weight, the higher the song will be in the playlist")
 
-    reference_count = 1
     list_of_songs_and_their_weight = defaultdict(int)
-    for period_top_tracks_list in top_tracks:
-        for track in period_top_tracks_list:
+    list_of_songs_and_their_total_plays = defaultdict(int)
+    for timeframe, top_tracks_period in top_tracks.items():
+        for track in top_tracks_period:
             track_and_artist = str(track[0])
             scrobbles = int(track[1])
-            # Add the song to the dict if not exist, and either way update that songs weighting
-            list_of_songs_and_their_weight[track_and_artist] += ceil((calculate_song_weight(reference_count) * scrobbles))
-        reference_count += 1
+            if list_of_songs_and_their_weight.get(track_and_artist, 0) == 0:
+                # Add the song to the dict and add the first score
+                list_of_songs_and_their_weight[track_and_artist] += ceil((calculate_song_weight(timeframe, scrobbles)))
+                list_of_songs_and_their_total_plays[track_and_artist] += scrobbles
+            else:
+                # This song is already in the list. Minus the scrobbles that have already been counted. Because the program is single threaded we can assume the program runs in timeframe descending
+                current_amount_of_scrobbles = list_of_songs_and_their_total_plays[track_and_artist]
+                list_of_songs_and_their_weight[track_and_artist] += ceil((calculate_song_weight(timeframe, scrobbles - current_amount_of_scrobbles)))
+
     sorted_tracks = OrderedDict(
         sorted(list_of_songs_and_their_weight.items(), key=operator.itemgetter(1), reverse=True))
 
     # Print out to the console the weighting each song has, for research purposes
     logging.info(json.dumps(sorted_tracks, indent=4))
+    
+    if TESTING:
+        logging.info("testing mode enabled. Exiting program before updating platlist")
+        sys.exit()
 
     # Get a list of tracks from sorted list
     spotify_searched_tracks = []
@@ -49,35 +60,34 @@ def dynamic_playlist_updater(playlist_id):
                 limit += 1
         else:
             break
-    if not TESTING:
-        logging.info("Updating spotify playlist and description")
-        utils.sp.playlist_replace_items(playlist_id, spotify_searched_tracks)
-        # Update the playlist description to show when the playlist was last updated
-        utils.sp.playlist_change_details(playlist_id,
-                               description=" Last updated - {} - {}".format(datetime.date.today(),
-                                                                            config.rhitons_selection_description))
-    else:
-        logging.info("Did not update the playlist. Testing flag enabled")
 
-def calculate_song_weight(reference_count):
+    logging.info("Updating spotify playlist and description")
+    utils.sp.playlist_replace_items(playlist_id, spotify_searched_tracks)
+    # Update the playlist description to show when the playlist was last updated
+    utils.sp.playlist_change_details(playlist_id,
+                            description=" Last updated - {} - {}".format(datetime.date.today(),
+                                                                            config.rhitons_selection_description))
+
+def calculate_song_weight(timeframe, scrobbles):
+    # TODO: BIG TODO: FIGURE OUT A WEIGHTING SYSTEM. user enters weight based on lower/higher number being more long term based. Output a score! Why is that so hard
     # Last 7 days
-    if reference_count == 1:
-        return SCORE_WEIGHTING * 100
+    if "7day" in timeframe:
+        return 400 * scrobbles 
     # Last month
-    elif reference_count == 2:
-        return (SCORE_WEIGHTING / reference_count) * 80
+    elif "1month" in timeframe:
+        return 150 * scrobbles
     # Last 3 months
-    elif reference_count == 3:
-        return (SCORE_WEIGHTING / reference_count) * 64
+    elif "3months" in timeframe:
+        return 100 * scrobbles
     # Last 6 months
-    elif reference_count == 4:
-        return (SCORE_WEIGHTING / reference_count) * 53
+    elif "6months" in timeframe:
+        return 80 * scrobbles
     # Last year
-    elif reference_count == 5:
-        return (SCORE_WEIGHTING / reference_count) * 42
+    elif "12months" in timeframe:
+        return 60 * scrobbles
     # Overall
-    elif reference_count == 6:
-        return (SCORE_WEIGHTING / reference_count) * 34
+    elif "overall" in timeframe:
+        return 30 * scrobbles
 
 def check_number(value):
     ivalue = int(value)
