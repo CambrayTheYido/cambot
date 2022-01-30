@@ -75,10 +75,10 @@ def calculate_song_weight(timeframe, scrobbles):
         return 400 * scrobbles 
     # Last month
     elif "1month" in timeframe:
-        return 150 * scrobbles
+        return 200 * scrobbles
     # Last 3 months
     elif "3months" in timeframe:
-        return 100 * scrobbles
+        return 150 * scrobbles
     # Last 6 months
     elif "6months" in timeframe:
         return 80 * scrobbles
